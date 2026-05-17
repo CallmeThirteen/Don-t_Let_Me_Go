@@ -1,0 +1,49 @@
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.opendb
+*.sln
+*.suo
+*.opensdf
+*.sdf
+
+# Unreal Engine
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Build files
+Build/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Rider
+.idea/
+
+# VSCode
+.vscode/
+
+# Ignore generated project files
+*.xcodeproj
+*.xcworkspace
+
+# Ignore auto-generated files
+*.obj
+*.pdb
+*.exe
+*.dll
+
+# Ignore shader cache
+DerivedDataCache/
+
+# Ignore crash reports
+crashinfo--*
