@@ -47,3 +47,7 @@ DerivedDataCache/
 
 # Ignore crash reports
 crashinfo--*
+
+# Unreal Engine Assets (large binary files)
+*.uasset
+*.umap
