@@ -9,10 +9,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Engine/Engine.h"
-#include "Engine/OverlapResult.h"
-#include "InputCoreTypes.h"
-#include "IslandResourcePickup.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -20,8 +16,6 @@
 
 ADontLetMeGoCharacter::ADontLetMeGoCharacter()
 {
-	PrimaryActorTick.bCanEverTick = true;
-
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -72,19 +66,6 @@ void ADontLetMeGoCharacter::BeginPlay()
 	}
 }
 
-void ADontLetMeGoCharacter::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (PlayerController->WasInputKeyJustPressed(EKeys::E))
-		{
-			Interact();
-		}
-	}
-}
-
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -103,7 +84,10 @@ void ADontLetMeGoCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ADontLetMeGoCharacter::Look);
 
+		//ToggleInventory
+		EnhancedInputComponent->BindAction(ToggleInventoryAction,ETriggerEvent::Started, this, &ADontLetMeGoCharacter::ToggleInventory);
 	}
+
 }
 
 void ADontLetMeGoCharacter::Move(const FInputActionValue& Value)
@@ -142,99 +126,32 @@ void ADontLetMeGoCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void ADontLetMeGoCharacter::Interact()
-{
-	AIslandResourcePickup* Pickup = FindClosestResourcePickup();
-	if (!Pickup)
-	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Silver, TEXT("No resource nearby."));
+void ADontLetMeGoCharacter::ToggleInventory(){
+	if(!InventoryWidget){
+		if(!InventoryWidgetClass){
+			UE_LOG(LogTemp,Warning,TEXT("InventoryWidgetClass is not set!"));
+			return ;
 		}
-		return;
-	}
-
-	Pickup->Collect(this);
-}
-
-AIslandResourcePickup* ADontLetMeGoCharacter::FindClosestResourcePickup() const
-{
-	UWorld* World = GetWorld();
-	if (!World)
-	{
-		return nullptr;
-	}
-
-	TArray<FOverlapResult> Overlaps;
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(InteractionRadius);
-	const bool bHasOverlap = World->OverlapMultiByObjectType(
-		Overlaps,
-		GetActorLocation(),
-		FQuat::Identity,
-		ObjectQueryParams,
-		Sphere
-	);
-
-	if (!bHasOverlap)
-	{
-		return nullptr;
-	}
-
-	AIslandResourcePickup* ClosestPickup = nullptr;
-	float ClosestDistanceSquared = TNumericLimits<float>::Max();
-
-	for (const FOverlapResult& Result : Overlaps)
-	{
-		AIslandResourcePickup* Pickup = Cast<AIslandResourcePickup>(Result.GetActor());
-		if (!Pickup)
-		{
-			continue;
-		}
-
-		const float DistanceSquared = FVector::DistSquared(GetActorLocation(), Pickup->GetActorLocation());
-		if (DistanceSquared < ClosestDistanceSquared)
-		{
-			ClosestDistanceSquared = DistanceSquared;
-			ClosestPickup = Pickup;
-		}
-	}
-
-	return ClosestPickup;
-}
-
-void ADontLetMeGoCharacter::AddResource(EResourceType ResourceType, int32 Amount)
-{
-	if (Amount <= 0)
-	{
-		return;
-	}
-
-	int32& CurrentAmount = Inventory.FindOrAdd(ResourceType);
-	CurrentAmount += Amount;
-
-	if (GEngine)
-	{
-		const FString ResourceName = StaticEnum<EResourceType>()->GetDisplayNameTextByValue(static_cast<int64>(ResourceType)).ToString();
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			2.0f,
-			FColor::Green,
-			FString::Printf(TEXT("Picked up %s x%d. Total: %d"), *ResourceName, Amount, CurrentAmount)
+		InventoryWidget = CreateWidget<UUserWidget>(
+			GetWorld(),
+			InventoryWidgetClass
 		);
+		if(!InventoryWidget){
+			UE_LOG(LogTemp,Warning,TEXT("Failed to create InventoryWidget!"));
+			return ;
+		}
+	}
+
+	if(!bInventoryOpen){
+		InventoryWidget->AddToViewport();
+		bInventoryOpen = true;
+	}
+	else{
+		InventoryWidget->RemoveFromParent();
+		bInventoryOpen = false;
 	}
 }
 
-int32 ADontLetMeGoCharacter::GetResourceCount(EResourceType ResourceType) const
-{
-	if (const int32* Count = Inventory.Find(ResourceType))
-	{
-		return *Count;
-	}
 
-	return 0;
-}
+
 

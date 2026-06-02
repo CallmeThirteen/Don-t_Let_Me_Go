@@ -5,10 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "ResourceTypes.h"
+#include "BluePrint\UserWidget.h"
 #include "DontLetMeGoCharacter.generated.h"
 
-class AIslandResourcePickup;
 
 UCLASS(config=Game)
 class ADontLetMeGoCharacter : public ACharacter
@@ -39,6 +38,9 @@ class ADontLetMeGoCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
+	/** ToggleInventory Input Action*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ToggleInventoryAction;
 public:
 	ADontLetMeGoCharacter();
 	
@@ -50,10 +52,6 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-
-	void Interact();
-
-	AIslandResourcePickup* FindClosestResourcePickup() const;
 			
 
 protected:
@@ -63,25 +61,21 @@ protected:
 	// To add mapping context
 	virtual void BeginPlay();
 
-	virtual void Tick(float DeltaSeconds) override;
-
 public:
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void AddResource(EResourceType ResourceType, int32 Amount);
-
-	UFUNCTION(BlueprintPure, Category = "Inventory")
-	int32 GetResourceCount(EResourceType ResourceType) const;
-
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
-	float InteractionRadius = 220.0f;
+	void ToggleInventory();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
-	TMap<EResourceType, int32> Inventory;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> InventoryWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* InventoryWidget;
+
+	bool bInventoryOpen = false;
 };
 
