@@ -31,61 +31,62 @@
 按TAB键可以显示和关闭一个空白UI了，也解决了vscode修改代码后更新到ue5的问题（ue5中Ctrl+Alt+F11进行live coding）
 但是我现在还是没掌握实际应用，只是跟着GPT做了一遍。现在学习相关流程和原理，我要掌握真正的操作。
 
-完成以下任务，目前看来对于如何用绑定增强按键输入和显示ui已经没什么问题了。
+刚刚自己手搓完成了以下任务，目前看来对于如何用绑定增强按键输入和显示ui，已经没什么问题了。
 
-1. UE5中创建UI
-    content->UI->user interface->widget blueprint->创建好ui显示效果
-2. UE5中创建ToggleInventoryAction
-    content->Input->action->input action->创建ToggleInventoryAction
-    IMC_default里绑定ToggleInventory到tab键
-3. 在build.cs中添加UMG
-4. 在Charactor.h中添加UI类引用、Input引用
-```protected:
-	void ToggleInventory();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> InventoryWidgetClass;
-
-	UPROPERTY()
-	UUserWidget* InventoryWidget;
-
-	bool bInventoryOpen = false; 
-     ToggleInventory Input Action
-	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ToggleInventoryAction; 
-```
-5. 在Charactor.cpp中实现ToggleInventory和绑定Input输入
-    
-``` void ADontLetMeGoCharacter::ToggleInventory(){
-	if(!InventoryWidget){
-		if(!InventoryWidgetClass){
-			UE_LOG(LogTemp,Warning,TEXT("InventoryWidgetClass is not set!"));
-			return ;
-		}
-		InventoryWidget = CreateWidget<UUserWidget>(
-			GetWorld(),
-			InventoryWidgetClass
-		);
-		if(!InventoryWidget){
-			UE_LOG(LogTemp,Warning,TEXT("Failed to create InventoryWidget!"));
-			return ;
-		}
-	}
-
-	if(!bInventoryOpen){
-		InventoryWidget->AddToViewport();
-		bInventoryOpen = true;
-	}
-	else{
-		InventoryWidget->RemoveFromParent();
-		bInventoryOpen = false;
-	}
-}
-```
-```
-    //ToggleInventory
-		EnhancedInputComponent->BindAction(ToggleInventoryAction,ETriggerEvent::Started, this, &ADontLetMeGoCharacter::ToggleInventory);
-```
+> 1. UE5中创建UI
+>     content->UI->user interface->widget blueprint->创建好ui显示效果
+> 2. UE5中创建ToggleInventoryAction
+>     content->Input->action->input action->创建ToggleInventoryAction
+>     IMC_default里绑定ToggleInventory到tab键
+> 3. 在build.cs中添加UMG
+> 4. 在Charactor.h中添加UI类引用、Input引用
+> ```protected:
+> 	void ToggleInventory();
+> 
+> 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
+> 	TSubclassOf<UUserWidget> InventoryWidgetClass;
+> 
+> 	UPROPERTY()
+> 	UUserWidget* InventoryWidget;
+> 
+> 	bool bInventoryOpen = false; 
+>     ToggleInventory Input Action
+> 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = Input, meta = (AllowPrivateAccess = "true"))
+> 	class UInputAction* ToggleInventoryAction; 
+> ```
+> 5. 在Charactor.cpp中实现ToggleInventory和绑定Input输入
+>     
+> ``` void ADontLetMeGoCharacter::ToggleInventory(){
+> 	if(!InventoryWidget){
+> 		if(!InventoryWidgetClass){
+> 			UE_LOG(LogTemp,Warning,TEXT("InventoryWidgetClass is not set!"));
+> 			return ;
+> 		}
+> 		InventoryWidget = CreateWidget<UUserWidget>(
+> 			GetWorld(),
+> 			InventoryWidgetClass
+> 		);
+> 		if(!InventoryWidget){
+> 			UE_LOG(LogTemp,Warning,TEXT("Failed to create InventoryWidget!"));
+> 			return ;
+> 		}
+> 	}
+> 
+> 	if(!bInventoryOpen){
+> 		InventoryWidget->AddToViewport();
+> 		bInventoryOpen = true;
+> 	}
+> 	else{
+> 		InventoryWidget->RemoveFromParent();
+> 		bInventoryOpen = false;
+> 	}
+> }
+> ```
+> ```
+>     //ToggleInventory
+> 		EnhancedInputComponent->BindAction(ToggleInventoryAction,ETriggerEvent::Started, this, &> ADontLetMeGoCharacter::ToggleInventory);
+> 
+> ```
 
 
 下一步就是实现资源拾取和背包交互。
