@@ -1,4 +1,4 @@
-# Don't Let Me Go 小型游戏策划案
+# Don't Let Me Go 第一版策划案
 
 ## 1. 项目定位
 
