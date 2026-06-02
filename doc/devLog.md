@@ -1,10 +1,11 @@
-#2026-5-17  
+# 开发日志
+## 2026-5-17  
 
 我想开始开发我的第一款游戏了。现在我还完全是小白，所以这只相当于是一个学习项目，我想开发的这款游戏叫Don’t let me go。我计划用C++制作，配合ue，编辑器采用vscode，使用github记录我的项目。我目前的大体想法是，类《大多数》风格，荒野求生类型，背景是我在学习生活中沉沦，幻想过上不平凡的生活，一次做梦，我在前往海外留学的过程中流落到一个荒岛，开始我的荒野求生，我的心情是复杂的，在崩溃之后，我振作起来，运用所学知识搭建避难所和解决饮食问题，但是因为相关知识技能有限，遇到很多挫折，直接把我干碎了，好在此时梦醒了。我庆幸只是个梦，但是第二天还是补充了相关知识，结果第二天做梦再次来到同一个荒岛，开始未竟的事业......如此循环往复，在现实和荒岛中切换，让我不断进步。这样一个背景。
 
 今天搞定了github，其实这是我第一次真正意义上搞懂github是如何使用的，也感受到了其中的魅力，今后一定要多使用github。
 
-#2026-6-1
+## 2026-6-1
 
 有点不像是人了，半个月转瞬即逝，赶紧开始流程啦。
 
@@ -13,18 +14,17 @@
 
 开始按照第一版策划案进入开发。默认第三人称模板已经可以运行。
 
-\**codex实现：
-新增第一版原型的第一个基础系统：资源拾取与简单背包。
-当前实现内容：
+>  codex实现：
+> 新增第一版原型的第一个基础系统：资源拾取与简单背包。
+> 当前实现内容：
+>
+> - 新增资源类型：树枝、石头、草、浆果、淡水
+> - 新增可拾取资源 Actor
+> - 角色可以按 E 与附近资源交互
+> - 拾取后资源进入角色的简单背包数据
+> - 屏幕会显示拾取提示和当前数量
 
-- 新增资源类型：树枝、石头、草、浆果、淡水
-- 新增可拾取资源 Actor
-- 角色可以按 E 与附近资源交互
-- 拾取后资源进入角色的简单背包数据
-- 屏幕会显示拾取提示和当前数量
-*/
-
-#2026-6-2
+## 2026-6-2
 
 昨天codex实现了资源拾取和简单背包，但是我并没掌握相关方法，今天计划自己实现背包系统。
 
@@ -33,14 +33,14 @@
 
 完成以下任务，目前看来对于如何用绑定增强按键输入和显示ui已经没什么问题了。
 
-1、UE5中创建UI
+1. UE5中创建UI
     content->UI->user interface->widget blueprint->创建好ui显示效果
-2、UE5中创建ToggleInventoryAction
+2. UE5中创建ToggleInventoryAction
     content->Input->action->input action->创建ToggleInventoryAction
     IMC_default里绑定ToggleInventory到tab键
-3、在build.cs中添加UMG
-4、在Charactor.h中添加UI类引用、Input引用
-    'protected:
+3. 在build.cs中添加UMG
+4. 在Charactor.h中添加UI类引用、Input引用
+```protected:
 	void ToggleInventory();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
@@ -49,13 +49,14 @@
 	UPROPERTY()
 	UUserWidget* InventoryWidget;
 
-	bool bInventoryOpen = false;'
-    '/** ToggleInventory Input Action*/
+	bool bInventoryOpen = false; 
+     ToggleInventory Input Action
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ToggleInventoryAction;'
-5、在Charactor.cpp中实现ToggleInventory和绑定Input输入
+	class UInputAction* ToggleInventoryAction; 
+```
+5. 在Charactor.cpp中实现ToggleInventory和绑定Input输入
     
-    'void ADontLetMeGoCharacter::ToggleInventory(){
+``` void ADontLetMeGoCharacter::ToggleInventory(){
 	if(!InventoryWidget){
 		if(!InventoryWidgetClass){
 			UE_LOG(LogTemp,Warning,TEXT("InventoryWidgetClass is not set!"));
@@ -79,11 +80,12 @@
 		InventoryWidget->RemoveFromParent();
 		bInventoryOpen = false;
 	}
-}'
-
-    '//ToggleInventory
+}
+```
+```
+    //ToggleInventory
 		EnhancedInputComponent->BindAction(ToggleInventoryAction,ETriggerEvent::Started, this, &ADontLetMeGoCharacter::ToggleInventory);
-	'
+```
 
 
 下一步就是实现资源拾取和背包交互。
