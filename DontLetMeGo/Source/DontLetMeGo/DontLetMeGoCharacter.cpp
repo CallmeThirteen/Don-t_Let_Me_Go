@@ -1,5 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+#include "PickupItem.h"
+#include "DrawDebugHelpers.h"
 #include "DontLetMeGoCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -86,6 +88,9 @@ void ADontLetMeGoCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 		//ToggleInventory
 		EnhancedInputComponent->BindAction(ToggleInventoryAction,ETriggerEvent::Started, this, &ADontLetMeGoCharacter::ToggleInventory);
+		
+		//PiskUp
+		EnhancedInputComponent->BindAction(PickUpAction, ETriggerEvent::Triggered, this, &ADontLetMeGoCharacter::PickUp);
 	}
 
 }
@@ -143,13 +148,61 @@ void ADontLetMeGoCharacter::ToggleInventory(){
 	}
 
 	if(!bInventoryOpen){
+		
 		InventoryWidget->AddToViewport();
+		if(APlayerController* PC = Cast<APlayerController>(GetController())){
+			PC->bShowMouseCursor=true;
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(InventoryWidget->TakeWidget());
+			PC->SetInputMode(InputMode);
+		}
 		bInventoryOpen = true;
 	}
 	else{
 		InventoryWidget->RemoveFromParent();
+		if(APlayerController* PC = Cast<APlayerController>(GetController())){
+			PC->bShowMouseCursor=false;
+			PC->SetInputMode(FInputModeGameOnly());
+		}
 		bInventoryOpen = false;
 	}
+}
+
+void ADontLetMeGoCharacter::PickUp(){
+	FVector start = FollowCamera->GetComponentLocation();
+	FVector end = start + FollowCamera->GetForwardVector()*500.f;
+
+	FHitResult Hit;
+	
+	bool bHit=GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		start,
+		end,
+		ECC_Visibility
+	);
+
+	if(bHit){
+		AActor* HitActor = Hit.GetActor();
+
+		APickupItem* Item = Cast<APickupItem>(HitActor);
+		if(Item){
+			UE_LOG(
+				LogTemp,Warning,TEXT("Item Name %s"),
+				*Item->ItemName
+			);
+		}
+	}
+
+	/**DrawDebugLine(
+		GetWorld(),
+		start,
+		end,
+		FColor::Red,
+		false,
+		2.f,
+		0,
+		2.f
+	);*/
 }
 
 
