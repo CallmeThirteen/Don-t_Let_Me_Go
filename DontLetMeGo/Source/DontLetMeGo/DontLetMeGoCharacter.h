@@ -39,8 +39,12 @@ class ADontLetMeGoCharacter : public ACharacter
 	class UInputAction* LookAction;
 
 	/** ToggleInventory Input Action*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ToggleInventoryAction;
+
+	/** PickUp Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* PickUpAction;
 public:
 	ADontLetMeGoCharacter();
 	
@@ -69,6 +73,7 @@ public:
 
 protected:
 	void ToggleInventory();
+	void PickUp();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> InventoryWidgetClass;
@@ -77,5 +82,12 @@ protected:
 	UUserWidget* InventoryWidget;
 
 	bool bInventoryOpen = false;
+
+	
+
+
+
+
+	
 };
 
