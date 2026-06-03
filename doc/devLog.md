@@ -84,9 +84,43 @@
 > ```
 > ```
 >     //ToggleInventory
-> 		EnhancedInputComponent->BindAction(ToggleInventoryAction,ETriggerEvent::Started, this, &> ADontLetMeGoCharacter::ToggleInventory);
+> 		EnhancedInputComponent->BindAction(ToggleInventoryAction,ETriggerEvent::Started, this, & ADontLetMeGoCharacter::ToggleInventory);
 > 
 > ```
 
 
 下一步就是实现资源拾取和背包交互。
+
+## 2026-6-3
+
+今天要实现简单的资源拾取和背包交互，完成简单的背包ui。
+
+今天完成了资源拾取和背包交互的前置条件，现在是能按e检测到目标actor并且输出actor的itemName了，还是有些进步和进展的。今日收获总结如下：
+> 1. 复习增强输入设置，这次是按E键。
+> 2. Line Trace，获取碰撞物品信息：
+>   ```FVector start = FollowCamera->GetComponentLocation();
+>       FVector end = start + FollowCamera->GetForwardVector()*500.f;
+>   FHitResult Hit;
+>    bool bHit= GetWorld()->LineTraceSingleByChannel(
+>       Hit,
+>        start,
+>        end,
+>        ECC_Visibility
+>    )
+>   if(bHit){
+>        AActor* HitActor=Hit.GetActor();
+>        APickupItem* Item=Cast<APickupItem>(HitActor);
+>        if(Item){
+>            UE_LOG(
+>                LogTemp,
+>                Warning,
+>                TEXT("Item Name %s"),
+>                *Item->ItemName
+>            );
+>        }
+>    }
+>
+
+本来今天就要实现资源拾取和背包交互的。但是确实遇见很多小麻烦，把蓝图Actor换成C++类Actor，这样才能用cast获取actor信息。
+
+明天一定要完成这项小功能，而且还有明天原本的任务安排。
