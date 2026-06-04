@@ -45,7 +45,15 @@ class ADontLetMeGoCharacter : public ACharacter
 	/** PickUp Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* PickUpAction;
-public:
+
+	/** Test Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* FunctionTestAction;
+	/** InventoryWidetgetClass */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> InventoryWidgetClass;
+
+	public:
 	ADontLetMeGoCharacter();
 	
 
@@ -74,19 +82,15 @@ public:
 protected:
 	void ToggleInventory();
 	void PickUp();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> InventoryWidgetClass;
+	void PrintInventory();
 
 	UPROPERTY()
 	UUserWidget* InventoryWidget;
 
 	bool bInventoryOpen = false;
 
-	
-
-
-
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FString> Inventory;
 
 	
 };

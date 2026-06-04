@@ -1,7 +1,7 @@
 # 开发日志
 ## 2026-5-17  
 
-我想开始开发我的第一款游戏了。现在我还完全是小白，所以这只相当于是一个学习项目，我想开发的这款游戏叫Don’t let me go。我计划用C++制作，配合ue，编辑器采用vscode，使用github记录我的项目。我目前的大体想法是，类《大多数》风格，荒野求生类型，背景是我在学习生活中沉沦，幻想过上不平凡的生活，一次做梦，我在前往海外留学的过程中流落到一个荒岛，开始我的荒野求生，我的心情是复杂的，在崩溃之后，我振作起来，运用所学知识搭建避难所和解决饮食问题，但是因为相关知识技能有限，遇到很多挫折，直接把我干碎了，好在此时梦醒了。我庆幸只是个梦，但是第二天还是补充了相关知识，结果第二天做梦再次来到同一个荒岛，开始未竟的事业......如此循环往复，在现实和荒岛中切换，让我不断进步。这样一个背景。
+我想开始开发我的第一款游戏了。我想开发的这款游戏叫Don’t let me go。我计划用C++制作，配合ue，编辑器采用vscode，使用github记录我的项目。我目前的大体想法是，类《大多数》风格，荒野求生类型，背景是我在学习生活中沉沦，幻想过上不平凡的生活，一次做梦，我在前往海外留学的过程中流落到一个荒岛，开始我的荒野求生，我的心情是复杂的，在崩溃之后，我振作起来，运用所学知识搭建避难所和解决饮食问题，但是因为相关知识技能有限，遇到很多挫折，直接把我干碎了，好在此时梦醒了。我庆幸只是个梦，但是第二天还是补充了相关知识，结果第二天做梦再次来到同一个荒岛，开始未竟的事业......如此循环往复，在现实和荒岛中切换，让我不断进步。这样一个背景。
 
 今天搞定了github，其实这是我第一次真正意义上搞懂github是如何使用的，也感受到了其中的魅力，今后一定要多使用github。
 
@@ -124,3 +124,71 @@
 本来今天就要实现资源拾取和背包交互的。但是确实遇见很多小麻烦，把蓝图Actor换成C++类Actor，这样才能用cast获取actor信息。
 
 明天一定要完成这项小功能，而且还有明天原本的任务安排。
+
+## 2026-6-4
+今天要完成昨天剩下的任务以及实现视角设置。
+
+终于实现了简单的资源拾取和背包交互。
+
+今天掌握的功能有
+1. 把物品信息打印到屏幕上：
+```
+    if(GEgine){
+        FString msg=FString::FPrint(
+            TEXT("Pick up:%s"),
+            *Item->ItemName
+        );
+        GEngine->AddOnScreenDebugMessage(
+            -1,
+            3.f,
+            FColor::Green,
+            msg
+        );
+    }
+```
+2. 拾取物品的逻辑：检测物品，记录物品，销毁物品
+```
+Inventory.Add(Item->ItemName);
+
+Item->destroy();
+```
+3. 背包数据更新：
+背包ui的widget全部继承于C++类，分别创建一个背包ui和一个背包内容text的类。
+背包内容text类中实现：
+```
+    UPROPERTY(Meta=(BindWidget))
+    UTextBlock* ItemNameText;
+
+    void SetItemName(const FString& Name){
+        if(ItemNameText){
+            ItemNameText->SetText(FString::Fromstring(Name));
+        }
+    }
+```
+背包本身ui类中实现：
+```Class UScrollBox;
+    Class UItemEntryWidget;
+
+    UPROPERTY(Meta= (BindWidget))
+    UScrollBox* ItemList;
+
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category= Inventpry)
+    TSubclassOf<UItemEntryWidget> ItemEntryClass;
+
+    void RefreshInventory(const TArray<FString>& Items){
+        if(!ItemList){
+            return ;
+        }
+        ItemList->ClearChildren();
+        for(const FString& ItemName: Items){
+            UItemEntryWidget* Entry = CreateWidget<UItemEntryWidget>(GetWorld(),ItemEntryClass);
+            if(Entry){
+                Entry->SetItemName(ItemName);
+                ItemList->AddChile(Entry);
+            }
+        }
+    }
+```
+
+
+
