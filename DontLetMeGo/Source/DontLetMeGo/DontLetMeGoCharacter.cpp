@@ -2,6 +2,9 @@
 
 #include "DontLetMeGoCharacter.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+#include "FollowCameraActor.h"
+#include "Kismet/GameplayStatics.h"
 #include "PickupItem.h"
 #include "InventoryWidget.h"
 #include "DrawDebugHelpers.h"
@@ -68,6 +71,17 @@ void ADontLetMeGoCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+	UWorld* World=GetWorld();
+		if(World){
+			FollowCameraActor = World->SpawnActor<AFollowCameraActor>(AFollowCameraActor::StaticClass(),
+		FVector(0.f,0.f,500.f), FRotator::ZeroRotator);
+			if(FollowCameraActor){
+				if(APlayerController* PC = UGameplayStatics::GetPlayerController(this,0)){
+					PC->SetViewTarget(FollowCameraActor);
+					UE_LOG(LogTemp,Warning,TEXT("Switched To FollowCameraActor"));
+				}
+			}
+		}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -126,14 +140,14 @@ void ADontLetMeGoCharacter::Move(const FInputActionValue& Value)
 void ADontLetMeGoCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	/*FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
-	}
+	}*/
 }
 
 void ADontLetMeGoCharacter::ToggleInventory(){
@@ -177,6 +191,49 @@ void ADontLetMeGoCharacter::ToggleInventory(){
 }
 
 void ADontLetMeGoCharacter::PickUp(){
+
+	FVector Start = GetActorLocation();
+	FVector End = Start+GetActorLocation()*250.f;
+	FHitResult Hit;
+
+	bool bHit = UKismetSystemLibrary::SphereTraceSingle(
+		GetWorld(),
+		Start,
+		End,
+		80.f,
+		UEngineTypes::ConvertToTraceType(ECC_Visibility),
+		false,
+		{},
+		EDrawDebugTrace::ForDuration,
+		Hit,
+		true
+	);
+
+	if(!bHit){
+		return;
+	}
+	if(bHit){
+		AActor* HitActor = Hit.GetActor();
+		APickupItem* Item=Cast<APickupItem>(HitActor);
+		if(Item){
+			Inventory.Add(Item->ItemName);
+			if(GEngine){
+				FString PickupInfo=FString::Printf(
+					TEXT("Pick UP :%s"),
+					*Item->ItemName
+				);
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					3.f,
+					FColor::Green,
+					PickupInfo
+				);
+			}
+			UE_LOG(LogTemp,Warning,TEXT("Pick Up : %s"),*Item->ItemName);
+			Item->Destroy();
+		}
+	}
+	/*//LineTrace
 	FVector start = FollowCamera->GetComponentLocation();
 	FVector end = start + FollowCamera->GetForwardVector()*500.f;
 
@@ -218,7 +275,8 @@ void ADontLetMeGoCharacter::PickUp(){
 			
 			Item->Destroy();
 		}
-	}
+
+	}*/
 
 	/**DrawDebugLine(
 		GetWorld(),
