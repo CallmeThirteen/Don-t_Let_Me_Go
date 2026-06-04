@@ -1,8 +1,10 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "PickupItem.h"
-#include "DrawDebugHelpers.h"
 #include "DontLetMeGoCharacter.h"
+
+#include "PickupItem.h"
+#include "InventoryWidget.h"
+#include "DrawDebugHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -90,7 +92,10 @@ void ADontLetMeGoCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 		EnhancedInputComponent->BindAction(ToggleInventoryAction,ETriggerEvent::Started, this, &ADontLetMeGoCharacter::ToggleInventory);
 		
 		//PiskUp
-		EnhancedInputComponent->BindAction(PickUpAction, ETriggerEvent::Triggered, this, &ADontLetMeGoCharacter::PickUp);
+		EnhancedInputComponent->BindAction(PickUpAction, ETriggerEvent::Started, this, &ADontLetMeGoCharacter::PickUp);
+
+		//Test
+		EnhancedInputComponent->BindAction(FunctionTestAction, ETriggerEvent::Started, this, &ADontLetMeGoCharacter::PrintInventory);
 	}
 
 }
@@ -148,7 +153,10 @@ void ADontLetMeGoCharacter::ToggleInventory(){
 	}
 
 	if(!bInventoryOpen){
-		
+		UInventoryWidget* InvWidget = Cast<UInventoryWidget>(InventoryWidget);
+		if(InvWidget){
+			InvWidget->RefreshInventory(Inventory);
+		}
 		InventoryWidget->AddToViewport();
 		if(APlayerController* PC = Cast<APlayerController>(GetController())){
 			PC->bShowMouseCursor=true;
@@ -186,10 +194,29 @@ void ADontLetMeGoCharacter::PickUp(){
 
 		APickupItem* Item = Cast<APickupItem>(HitActor);
 		if(Item){
+			Inventory.Add(Item->ItemName);
+
+			if (GEngine)
+        {
+            FString Msg = FString::Printf(
+                TEXT("Picked up: %s"), 
+                *Item->ItemName
+            );
+            
+            GEngine->AddOnScreenDebugMessage(
+                -1,           // Key
+                3.0f,         // 显示 3 秒
+                FColor::Green,
+                Msg
+            );
+        }
 			UE_LOG(
 				LogTemp,Warning,TEXT("Item Name %s"),
 				*Item->ItemName
 			);
+
+			
+			Item->Destroy();
 		}
 	}
 
@@ -205,6 +232,29 @@ void ADontLetMeGoCharacter::PickUp(){
 	);*/
 }
 
+void ADontLetMeGoCharacter::PrintInventory(){
+	UE_LOG(LogTemp,Warning,TEXT("============"));
+	if(GEngine){
+		FString InventoryNum=FString::Printf(
+			TEXT("Inventory count: %d"),
+			Inventory.Num()
+		);
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			3.f,
+			FColor::Green,
+			InventoryNum
+		);
+	}
+	UE_LOG(
+				LogTemp,
+				Warning,
+				TEXT("Inventpry Count: %d"),
+				Inventory.Num()
+			);
 
+	
+	UE_LOG(LogTemp,Warning,TEXT("============"));
+}
 
 
