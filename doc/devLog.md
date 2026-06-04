@@ -131,64 +131,126 @@
 终于实现了简单的资源拾取和背包交互。
 
 今天掌握的功能有
-1. 把物品信息打印到屏幕上：
-```
-    if(GEgine){
-        FString msg=FString::FPrint(
-            TEXT("Pick up:%s"),
-            *Item->ItemName
-        );
-        GEngine->AddOnScreenDebugMessage(
-            -1,
-            3.f,
-            FColor::Green,
-            msg
-        );
-    }
-```
-2. 拾取物品的逻辑：检测物品，记录物品，销毁物品
-```
-Inventory.Add(Item->ItemName);
-
-Item->destroy();
-```
-3. 背包数据更新：
-背包ui的widget全部继承于C++类，分别创建一个背包ui和一个背包内容text的类。
-背包内容text类中实现：
-```
-    UPROPERTY(Meta=(BindWidget))
-    UTextBlock* ItemNameText;
-
-    void SetItemName(const FString& Name){
-        if(ItemNameText){
-            ItemNameText->SetText(FString::Fromstring(Name));
-        }
-    }
-```
-背包本身ui类中实现：
-```Class UScrollBox;
-    Class UItemEntryWidget;
-
-    UPROPERTY(Meta= (BindWidget))
-    UScrollBox* ItemList;
-
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category= Inventpry)
-    TSubclassOf<UItemEntryWidget> ItemEntryClass;
-
-    void RefreshInventory(const TArray<FString>& Items){
-        if(!ItemList){
-            return ;
-        }
-        ItemList->ClearChildren();
-        for(const FString& ItemName: Items){
-            UItemEntryWidget* Entry = CreateWidget<UItemEntryWidget>(GetWorld(),ItemEntryClass);
-            if(Entry){
-                Entry->SetItemName(ItemName);
-                ItemList->AddChile(Entry);
-            }
-        }
-    }
-```
-
+>1. 把物品信息打印到屏幕上：
+>```
+>    if(GEgine){
+>        FString msg=FString::FPrint(
+>            TEXT("Pick up:%s"),
+>            *Item->ItemName
+>        );
+>        GEngine->AddOnScreenDebugMessage(
+>            -1,
+>            3.f,
+>            FColor::Green,
+>            msg
+>        );
+>    }
+>```
+>2. 拾取物品的逻辑：检测物品，记录物品，销毁物品
+>```
+>Inventory.Add(Item->ItemName);
+>
+>Item->destroy();
+>```
+>背包数据更新：
+>背包ui的widget全部继承于C++类，分别创建一个背包ui和一个背包内容text的类。
+>4. 背包内容text类中实现：
+>```
+>    UPROPERTY(Meta=(BindWidget))
+>    UTextBlock* ItemNameText;
+>
+>    void SetItemName(const FString& Name){
+>        if(ItemNameText){
+>            ItemNameText->SetText(FString::Fromstring(Name));
+>        }
+>    }
+>```
+>5. 背包本身ui类中实现：
+>```Class UScrollBox;
+>    Class UItemEntryWidget;
+>
+>    UPROPERTY(Meta= (BindWidget))
+>    UScrollBox* ItemList;
+>
+>    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category= Inventpry)
+>    TSubclassOf<UItemEntryWidget> ItemEntryClass;
+>
+>    void RefreshInventory(const TArray<FString>& Items){
+>        if(!ItemList){
+>            return ;
+>        }
+>        ItemList->ClearChildren();
+>        for(const FString& ItemName: Items){
+>            UItemEntryWidget* Entry = CreateWidget<UItemEntryWidget>(GetWorld(),ItemEntryClass);
+>            if(Entry){
+>                Entry->SetItemName(ItemName);
+>                ItemList->AddChile(Entry);
+>            }
+>        }
+>    }
+>```
+>实现视角转换，舍弃了模板的视角，更换为了俯视视角。
+>6. 添加独立相机
+>```
+>	PrimaryActorTick.bCanEverTick = true;
+>	Camera=CreateDefaultSubobject<UCameraComponent>(TEXT>("Camera"));
+>	RootComponent = Camera;
+>```
+>7. 设置相机位置和角度
+>```
+>TargetCharacter = UGameplayStatics::GetPlayerCharacter(this,0);
+>	if(!TargetCharacter){
+>		return ;
+>	}
+>	FVector PlayerLocation = TargetCharacter->GetActorLocation();
+>	FVector CameraLocation = PlayerLocation+FVector(-600.f,0.f,>600.f);
+>	SetActorLocation(CameraLocation);
+>	SetActorRotation(
+>		FRotator(
+>			0.f,
+>			0.f,
+>			0.f
+>		)
+>	);
+>```
+>8. 让相机跟随角色
+>```
+>void AFollowCameraActor::Tick(float DeltaTime)
+>{
+>	Super::Tick(DeltaTime);
+>	if(!TargetCharacter){
+>		return ;
+>	}
+>	FVector TargetLocation=TargetCharacter->GetActorLocation()>+FVector(
+>		-600.f,
+>		0.f,
+>		600.f);
+>	//SetActorLocation(TargetLocation);
+>	FVector NewLocation = FMath::VInterpTo(GetActorLocation(),TargetLocation,DeltaTime,5.f);
+>	SetActorLocation(NewLocation);
+>	FRotator LookAtRotation = (TargetCharacter->GetActorLocation()-GetActorLocation()).Rotation();
+>
+>	SetActorRotation(LookAtRotation);
+>}
+>```
+>
+>9. 除此之外还更新优化了资源拾取的方式，从LineTrace改为了SphereTrace>的方式。
+>```
+>#include "KismetSystemLibrary.h"
+>
+>bool bHit = UKismetSystemLibrary::SphereTraceSingle(
+>		GetWorld(),
+>		Start,
+>		End,
+>		80.f,
+>		UEngineTypes::ConvertToTraceType(ECC_Visibility),
+>		false,
+>		{},
+>		EDrawDebugTrace::ForDuration,
+>		Hit,
+>		true
+>	);
+>
+>```
 
 

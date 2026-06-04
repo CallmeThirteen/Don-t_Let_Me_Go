@@ -8,7 +8,7 @@
 #include "BluePrint\UserWidget.h"
 #include "DontLetMeGoCharacter.generated.h"
 
-
+class AFollowCameraActor;
 UCLASS(config=Game)
 class ADontLetMeGoCharacter : public ACharacter
 {
@@ -71,14 +71,16 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 	// To add mapping context
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
+private:
+	UPROPERTY()
+	AFollowCameraActor* FollowCameraActor;
 protected:
 	void ToggleInventory();
 	void PickUp();
