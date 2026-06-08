@@ -16,7 +16,7 @@ public:
 	APickupItem();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	FString ItemName;
+	FName ItemID;
 
 protected:
 	// Called when the game starts or when spawned

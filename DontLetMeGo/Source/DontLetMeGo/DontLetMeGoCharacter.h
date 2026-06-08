@@ -4,11 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Inventory/InventoryComponent.h"
 #include "InputActionValue.h"
 #include "BluePrint\UserWidget.h"
 #include "DontLetMeGoCharacter.generated.h"
 
 class AFollowCameraActor;
+class UInventoryComponent;
+
+
+
 UCLASS(config=Game)
 class ADontLetMeGoCharacter : public ACharacter
 {
@@ -21,6 +26,10 @@ class ADontLetMeGoCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	/** Inventory */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta= (AllowPrivateAccess = "true"))
+	UInventoryComponent* InventoryComponent;
 	
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -52,6 +61,8 @@ class ADontLetMeGoCharacter : public ACharacter
 	/** InventoryWidetgetClass */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> InventoryWidgetClass;
+
+	
 
 	public:
 	ADontLetMeGoCharacter();
@@ -90,9 +101,6 @@ protected:
 	UUserWidget* InventoryWidget;
 
 	bool bInventoryOpen = false;
-
-	UPROPERTY(BlueprintReadOnly)
-	TArray<FString> Inventory;
 
 	
 };

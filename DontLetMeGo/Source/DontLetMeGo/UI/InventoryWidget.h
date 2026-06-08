@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "../Inventory/InventoryComponent.h"
+#include "../Inventory/InventoryTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "InventoryWidget.generated.h"
 
@@ -11,6 +13,7 @@
  */
 class UScrollBox;
 class UItemEntryWidget;
+class UInventoryComponent;
 UCLASS()
 class DONTLETMEGO_API UInventoryWidget : public UUserWidget
 {
@@ -23,7 +26,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Inventory")
 	TSubclassOf<UItemEntryWidget> ItemEntryClass;
 	
-	void RefreshInventory(const TArray<FString>& Items);
+	UPROPERTY()
+	UInventoryComponent* InventoryComponent;
 
+	void RefreshInventory(const TArray<FInventorySlot>& Items);
+
+	void SetInventoryComponent(
+		UInventoryComponent* InComponent
+	);
 
 };
