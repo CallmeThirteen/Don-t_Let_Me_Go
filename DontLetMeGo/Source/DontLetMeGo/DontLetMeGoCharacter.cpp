@@ -3,10 +3,11 @@
 #include "DontLetMeGoCharacter.h"
 
 #include "Kismet/KismetSystemLibrary.h"
-#include "FollowCameraActor.h"
+#include "myCamera/FollowCameraActor.h"
 #include "Kismet/GameplayStatics.h"
-#include "PickupItem.h"
-#include "InventoryWidget.h"
+#include "Inventory/InventoryComponent.h"
+#include "Items/PickupItem.h"
+#include "UI/InventoryWidget.h"
 #include "DrawDebugHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -26,6 +27,8 @@ ADontLetMeGoCharacter::ADontLetMeGoCharacter()
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -169,7 +172,8 @@ void ADontLetMeGoCharacter::ToggleInventory(){
 	if(!bInventoryOpen){
 		UInventoryWidget* InvWidget = Cast<UInventoryWidget>(InventoryWidget);
 		if(InvWidget){
-			InvWidget->RefreshInventory(Inventory);
+			InvWidget->SetInventoryComponent(InventoryComponent);
+			InvWidget->RefreshInventory(InventoryComponent->GetSlots());
 		}
 		InventoryWidget->AddToViewport();
 		if(APlayerController* PC = Cast<APlayerController>(GetController())){
@@ -193,14 +197,14 @@ void ADontLetMeGoCharacter::ToggleInventory(){
 void ADontLetMeGoCharacter::PickUp(){
 
 	FVector Start = GetActorLocation();
-	FVector End = Start+GetActorLocation()*250.f;
+	FVector End = Start;
 	FHitResult Hit;
 
 	bool bHit = UKismetSystemLibrary::SphereTraceSingle(
 		GetWorld(),
 		Start,
 		End,
-		80.f,
+		100.f,
 		UEngineTypes::ConvertToTraceType(ECC_Visibility),
 		false,
 		{},
@@ -216,11 +220,11 @@ void ADontLetMeGoCharacter::PickUp(){
 		AActor* HitActor = Hit.GetActor();
 		APickupItem* Item=Cast<APickupItem>(HitActor);
 		if(Item){
-			Inventory.Add(Item->ItemName);
+			InventoryComponent->AddItem(Item->ItemID,1);
 			if(GEngine){
 				FString PickupInfo=FString::Printf(
 					TEXT("Pick UP :%s"),
-					*Item->ItemName
+					*Item->ItemID.ToString()
 				);
 				GEngine->AddOnScreenDebugMessage(
 					-1,
@@ -229,7 +233,7 @@ void ADontLetMeGoCharacter::PickUp(){
 					PickupInfo
 				);
 			}
-			UE_LOG(LogTemp,Warning,TEXT("Pick Up : %s"),*Item->ItemName);
+			UE_LOG(LogTemp,Warning,TEXT("Pick Up : %s"),*Item->ItemID.ToString());
 			Item->Destroy();
 		}
 	}
@@ -295,7 +299,7 @@ void ADontLetMeGoCharacter::PrintInventory(){
 	if(GEngine){
 		FString InventoryNum=FString::Printf(
 			TEXT("Inventory count: %d"),
-			Inventory.Num()
+			InventoryComponent->GetSlots().Num()
 		);
 		GEngine->AddOnScreenDebugMessage(
 			-1,
@@ -308,7 +312,7 @@ void ADontLetMeGoCharacter::PrintInventory(){
 				LogTemp,
 				Warning,
 				TEXT("Inventpry Count: %d"),
-				Inventory.Num()
+				InventoryComponent->GetSlots().Num()
 			);
 
 	
