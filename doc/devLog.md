@@ -254,3 +254,45 @@
 >```
 
 
+## 2026-6-8
+
+玩耍的时间过得总是这么快，5号是因为准备第二天的笔试，6号是因为笔试完想放松，结果一放松就给7号也放过去了。
+
+今天要把背包结构更新，原本只是存储string，现在要改为存数据结构。
+
+今天完成了背包结构的更新，新创建了DataTable，资源拾取改变DataTable，背包读取数据显示。
+>```
+>USTRUCT(BlueprintType)
+>struct FItemData:public FTableRowBase{
+>    GENERATED_BODY()
+>
+>    UPROPERTY(EditAnywhere,BlueprintReadOnly)
+>    FName ItemID;
+>
+>    UPROPERTY(EditAnywhere,BlueprintReadOnly)
+>    FText DisplayName;
+>
+>    UPROPERTY(EditAnywhere,BlueprintReadOnly)
+>    int32 MaxStack= 99;
+>
+>    UPROPERTY(EditAnywhere,BlueprintReadOnly)
+>    int32 BuyPrice=0;
+>
+>    UPROPERTY(EditAnywhere,BlueprintReadOnly)
+>    int32 SellPrice=0;
+>};
+>
+>USTRUCT(BlueprintType)
+>struct FInventorySlot{
+>    GENERATED_BODY()
+>
+>    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+>    FName ItemID;
+>
+>    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+>    int32 Count=0;
+>};
+>```
+把各部分代码都分开独立在了各自文件夹里，方便日后管理。
+优化了资源拾取的检测方式。
+
