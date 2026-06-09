@@ -6,8 +6,10 @@
 #include "myCamera/FollowCameraActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Inventory/InventoryComponent.h"
+#include "Status/StatusComponent.h"
 #include "Items/PickupItem.h"
 #include "UI/InventoryWidget.h"
+#include "UI/StatusWidget.h"
 #include "DrawDebugHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -28,6 +30,7 @@ ADontLetMeGoCharacter::ADontLetMeGoCharacter()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -85,6 +88,17 @@ void ADontLetMeGoCharacter::BeginPlay()
 				}
 			}
 		}
+
+	if(StatusWidgetClass){
+		StatusWidget=CreateWidget<UStatusWidget>(
+			GetWorld(),
+			StatusWidgetClass
+		);
+		if(StatusWidget){
+			StatusWidget->AddToViewport();
+			StatusWidget->SetStatusComponent(StatusComponent);
+		}
+	}	
 }
 
 //////////////////////////////////////////////////////////////////////////
