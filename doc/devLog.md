@@ -296,3 +296,25 @@
 把各部分代码都分开独立在了各自文件夹里，方便日后管理。
 优化了资源拾取的检测方式。
 
+## 2026-6-9
+今天实现角色状态和状态显示
+>Hunger、Thirst、Spirit、Stamina
+>```
+>
+>	PROPERTY(EditAnywhere,BlueprintReadOnly)
+>	FStatusValue Hunger;
+>
+>	PROPERTY(EditAnywhere,BlueprintReadOnly)
+>	FStatusValue Thirst;
+>
+>	PROPERTY(EditAnywhere,BlueprintReadOnly)
+>	FStatusValue Spirit;
+>
+>	PROPERTY(EditAnywhere,BlueprintReadOnly)
+>	FStatusValue Stamina;
+>``
+>Foder:Status
+>UI/StatusWidget
+
+
+
