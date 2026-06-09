@@ -5,14 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Inventory/InventoryComponent.h"
+#include "Status/StatusComponent.h"
 #include "InputActionValue.h"
 #include "BluePrint\UserWidget.h"
 #include "DontLetMeGoCharacter.generated.h"
 
 class AFollowCameraActor;
 class UInventoryComponent;
-
-
+class UStatusComponent;
+class UStatusWidget;
 
 UCLASS(config=Game)
 class ADontLetMeGoCharacter : public ACharacter
@@ -31,6 +32,10 @@ class ADontLetMeGoCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta= (AllowPrivateAccess = "true"))
 	UInventoryComponent* InventoryComponent;
 	
+	/** Status */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Status, meta = (AllowPrivateAccess= "true"))
+	UStatusComponent* StatusComponent;
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
@@ -59,10 +64,13 @@ class ADontLetMeGoCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* FunctionTestAction;
 	/** InventoryWidetgetClass */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> InventoryWidgetClass;
 
-	
+	/**  StatusWidget */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UStatusWidget> StatusWidgetClass;
+
 
 	public:
 	ADontLetMeGoCharacter();
@@ -99,6 +107,9 @@ protected:
 
 	UPROPERTY()
 	UUserWidget* InventoryWidget;
+	
+	UPROPERTY()
+	UStatusWidget* StatusWidget;
 
 	bool bInventoryOpen = false;
 
