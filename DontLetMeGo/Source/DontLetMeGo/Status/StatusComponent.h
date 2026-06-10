@@ -14,6 +14,7 @@ class DONTLETMEGO_API UStatusComponent : public UActorComponent
 	GENERATED_BODY()
 private:
 	bool bIsMoving=false;
+	
 
 
 public:	
@@ -45,5 +46,7 @@ public:
 	bool IsMoving()const{
 		return bIsMoving;
 	}
+	bool bIsDead=false;
+	
 	
 };
