@@ -36,13 +36,13 @@ void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		bIsDead=true;
 	}
 	if (bIsMoving)
-{
-    Stamina.CurrentValue -= 8.f * DeltaTime;
-}
-else
-{
-    Stamina.CurrentValue += 5.f * DeltaTime;
-}
+	{
+    	Stamina.CurrentValue -= 8.f * DeltaTime;
+	}
+	else
+	{
+    	Stamina.CurrentValue += 5.f * DeltaTime;
+	}
 
 Stamina.CurrentValue = FMath::Clamp(
     Stamina.CurrentValue,
