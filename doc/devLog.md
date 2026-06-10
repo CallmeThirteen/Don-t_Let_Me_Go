@@ -319,4 +319,50 @@
 ## 2026-6-10
 今天要实现角色移动消耗体力，不移动恢复体力。
 实现状态值变为0时回到房间地图。
-
+>```
+>void SetMoving(bool bMoving);
+>
+>	bool IsMoving()const{
+>		return bIsMoving;
+>	}
+>
+>if (StatusComponent)
+>	{
+>    	StatusComponent->SetMoving(
+>        	!MovementVector.IsNearlyZero()
+>    	);
+>	}
+>if (bIsMoving)
+>{
+>    Stamina.CurrentValue -= 8.f * DeltaTime;
+>}
+>else
+>{
+>    Stamina.CurrentValue += 5.f * DeltaTime;
+>}
+>
+>void ADontLetMeGoCharacter::Tick(float DeltaTime)
+>{
+>    Super::Tick(DeltaTime);
+>
+>
+>    if (bIsChangingLevel)
+>    {
+>        return;
+>    }
+>
+>    if (StatusComponent &&
+>        StatusComponent->Hunger.CurrentValue <= 0.f)
+>    {
+>        bIsChangingLevel = true;
+>		if (StatusWidget)
+>{
+    StatusWidget->SetVisibility(ESlateVisibility::Hidden);
+}	
+        UGameplayStatics::OpenLevel(
+            GetWorld(),
+            FName("RoomMap")
+        );
+    }
+}
+>```
