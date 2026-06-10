@@ -56,6 +56,9 @@ void UStatusWidget::NativeTick(const FGeometry& MyGeometry,float InDeltaTime){
     if(SpiritText){
         SpiritText->SetText(FText::AsNumber(FMath::RoundToInt(StatusComponent->Spirit.CurrentValue)));
     }
+    if(StaminaText){
+        StaminaText->SetText(FText::AsNumber(FMath::RoundToInt(StatusComponent->Stamina.CurrentValue)));
+    }
 
 
 
