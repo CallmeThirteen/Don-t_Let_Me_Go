@@ -115,6 +115,12 @@ void ADontLetMeGoCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ADontLetMeGoCharacter::Move);
+		EnhancedInputComponent->BindAction(
+    MoveAction,
+    ETriggerEvent::Completed,
+    this,
+    &ADontLetMeGoCharacter::StopMove
+);
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ADontLetMeGoCharacter::Look);
@@ -135,7 +141,12 @@ void ADontLetMeGoCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
+	if (StatusComponent)
+	{
+    	StatusComponent->SetMoving(
+        	!MovementVector.IsNearlyZero()
+    	);
+	}
 	if (Controller != nullptr)
 	{
 		// find out which way is forward
@@ -152,6 +163,14 @@ void ADontLetMeGoCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
+}
+
+void ADontLetMeGoCharacter::StopMove()
+{
+    if (StatusComponent)
+    {
+        StatusComponent->SetMoving(false);
+    }
 }
 
 void ADontLetMeGoCharacter::Look(const FInputActionValue& Value)

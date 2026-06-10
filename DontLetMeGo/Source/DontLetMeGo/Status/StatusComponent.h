@@ -12,6 +12,9 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DONTLETMEGO_API UStatusComponent : public UActorComponent
 {
 	GENERATED_BODY()
+private:
+	bool bIsMoving=false;
+
 
 public:	
 	// Sets default values for this component's properties
@@ -37,5 +40,10 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly)
 	FStatusValue Stamina;
 
+	void SetMoving(bool bMoving);
+
+	bool IsMoving()const{
+		return bIsMoving;
+	}
 	
 };

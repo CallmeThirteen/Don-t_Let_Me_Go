@@ -104,7 +104,7 @@ protected:
 	void ToggleInventory();
 	void PickUp();
 	void PrintInventory();
-
+	void StopMove();
 	UPROPERTY()
 	UUserWidget* InventoryWidget;
 	

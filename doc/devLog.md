@@ -316,5 +316,6 @@
 >Foder:Status
 >UI/StatusWidget
 
-
+## 2026-6-10
+今天要实现角色移动消耗体力，不移动恢复体力。
 
