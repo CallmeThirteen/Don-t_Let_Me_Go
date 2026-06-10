@@ -3,6 +3,7 @@
 #include "DontLetMeGoCharacter.h"
 
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "myCamera/FollowCameraActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Inventory/InventoryComponent.h"
@@ -26,6 +27,9 @@
 
 ADontLetMeGoCharacter::ADontLetMeGoCharacter()
 {
+
+	PrimaryActorTick.bCanEverTick = true;
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -99,6 +103,34 @@ void ADontLetMeGoCharacter::BeginPlay()
 			StatusWidget->SetStatusComponent(StatusComponent);
 		}
 	}	
+
+
+	
+}
+
+void ADontLetMeGoCharacter::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+
+    if (bIsChangingLevel)
+    {
+        return;
+    }
+
+    if (StatusComponent &&
+        StatusComponent->Hunger.CurrentValue <= 0.f)
+    {
+        bIsChangingLevel = true;
+		if (StatusWidget)
+{
+    StatusWidget->SetVisibility(ESlateVisibility::Hidden);
+}	
+        UGameplayStatics::OpenLevel(
+            GetWorld(),
+            FName("RoomMap")
+        );
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -241,7 +273,7 @@ void ADontLetMeGoCharacter::PickUp(){
 		UEngineTypes::ConvertToTraceType(ECC_Visibility),
 		false,
 		{},
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,//ForDuration,
 		Hit,
 		true
 	);
@@ -328,16 +360,19 @@ void ADontLetMeGoCharacter::PickUp(){
 }
 
 void ADontLetMeGoCharacter::PrintInventory(){
+
+	StatusComponent->Hunger.CurrentValue=0;
+
 	UE_LOG(LogTemp,Warning,TEXT("============"));
+	
 	if(GEngine){
 		FString InventoryNum=FString::Printf(
-			TEXT("Inventory count: %d"),
-			InventoryComponent->GetSlots().Num()
+			TEXT("梦醒了！")
 		);
 		GEngine->AddOnScreenDebugMessage(
 			-1,
-			3.f,
-			FColor::Green,
+			6.f,
+			FColor::Red,
 			InventoryNum
 		);
 	}
@@ -352,4 +387,14 @@ void ADontLetMeGoCharacter::PrintInventory(){
 	UE_LOG(LogTemp,Warning,TEXT("============"));
 }
 
-
+void ADontLetMeGoCharacter::GoToRoom(){
+	
+	if(bIsChangingLevel){
+		return;
+	}
+	bIsChangingLevel=true;
+	UGameplayStatics::OpenLevel(
+        GetWorld(),
+        FName("RoomMap")
+    );
+}

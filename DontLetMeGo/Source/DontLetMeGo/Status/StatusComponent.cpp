@@ -32,6 +32,9 @@ void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Hunger.CurrentValue -= DeltaTime * 0.1f;
 	Thirst.CurrentValue -= DeltaTime * 0.2f;
 	Spirit.CurrentValue -= DeltaTime * 0.05f;
+	if(Hunger.CurrentValue<=0){
+		bIsDead=true;
+	}
 	if (bIsMoving)
 {
     Stamina.CurrentValue -= 8.f * DeltaTime;
@@ -52,3 +55,4 @@ Stamina.CurrentValue = FMath::Clamp(
 void UStatusComponent::SetMoving(bool bMoving){
 	bIsMoving = bMoving;
 }
+

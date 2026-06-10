@@ -75,6 +75,7 @@ class ADontLetMeGoCharacter : public ACharacter
 	public:
 	ADontLetMeGoCharacter();
 	
+    virtual void Tick(float DeltaTime) override;
 
 protected:
 
@@ -93,6 +94,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
@@ -100,11 +102,15 @@ public:
 private:
 	UPROPERTY()
 	AFollowCameraActor* FollowCameraActor;
+
+	bool bIsChangingLevel = false;
 protected:
 	void ToggleInventory();
 	void PickUp();
 	void PrintInventory();
 	void StopMove();
+	void GoToRoom();
+
 	UPROPERTY()
 	UUserWidget* InventoryWidget;
 	
