@@ -2,7 +2,7 @@
 
 > *一款关于"在梦境荒岛中学习生存，也在现实生活中学习活下去"的循环成长型荒野求生游戏。*
 
-> 在现实的沉沦中幻想不凡，在梦境的残酷中学会生还。
+> *在现实的沉沦中幻想不凡，在梦境的残酷中学会生还。*
 
 ---
 
@@ -39,35 +39,6 @@
 
 ---
 
-## 📁 项目结构
-
-```
-DontLetMeGo/
-├── Source/                    # C++ 源代码
-│   ├── DontLetMeGo/         # 核心模块
-│   │   ├── Character/       # 角色控制
-│   │   ├── Inventory/       # 背包系统
-│   │   ├── Crafting/        # 制作系统
-│   │   ├── Survival/        # 生存状态系统
-│   │   ├── Dream/           # 梦境切换系统
-│   │   └── Knowledge/       # 知识成长系统
-│   └── DontLetMeGoEditor/   # 编辑器扩展
-├── Content/                   # 资产目录
-│   ├── Maps/                # 关卡地图
-│   │   ├── RealityRoom     # 现实场景
-│   │   └── IslandDream     # 荒岛梦境
-│   ├── Blueprints/          # 蓝图资产
-│   ├── UI/                  # 界面资产
-│   ├── Audio/               # 音效音乐
-│   └── Materials/           # 材质
-├── Docs/                      # 文档
-│   ├── GDD.md               # 游戏策划案
-│   └── DevLog/              # 开发日志
-└── README.md                  # 本文件
-```
-
----
-
 ## 🎯 第一版原型目标
 
 完成一个"**第一天荒岛梦境 + 梦醒 + 第二次入梦**"的基础流程：
@@ -80,43 +51,6 @@ DontLetMeGo/
 - ✅ 因失败或完成目标而梦醒
 - ✅ 在现实阶段获得新知识/配方
 - ✅ 再次进入同一座荒岛，使用新知识推进
-
----
-
-## 🚀 快速开始
-
-### 环境要求
-
-- Unreal Engine 5.x
-- Visual Studio 2022 / VS Code + C++ 扩展
-- Git
-
-### 构建步骤
-
-```bash
-# 克隆仓库
-git clone https://github.com/yourusername/DontLetMeGo.git
-cd DontLetMeGo
-
-# 生成项目文件
-# Windows:
-GenerateProjectFiles.bat
-# macOS/Linux:
-./GenerateProjectFiles.sh
-
-# 编译项目
-# 在 VS Code 中按 Ctrl+Shift+B 或：
-# 在 Visual Studio 中构建项目
-
-# 打开项目
-# 双击 .uproject 文件或在 UE 编辑器中打开
-```
-
-### 运行游戏
-
-1. 在 Unreal Editor 中打开项目
-2. 打开 `Content/Maps/RealityRoom` 关卡
-3. 点击 **Play** 开始游戏
 
 ---
 
@@ -157,18 +91,6 @@ GenerateProjectFiles.bat
 
 ---
 
-## 📖 开发原则
-
-> **先做能玩的，再做漂亮的。**
-
-- ✅ 先做小循环，再做大世界
-- ✅ 先做核心系统，再做复杂内容
-- ✅ 每完成一个小功能就记录开发日志
-- ✅ 每完成一个稳定节点就提交 Git
-- ✅ 遇到不会的内容，优先拆小，而不是放弃
-
----
-
 ## 📌 后续扩展方向
 
 - [ ] 更复杂的制作系统与工具升级
@@ -186,8 +108,6 @@ GenerateProjectFiles.bat
 
 本项目是作者的第一款游戏开发学习项目，欢迎建议和交流！
 
-如有想法或反馈，请通过 Issue 或 Discussion 提出。
-
 ---
 
 ## 📄 许可证
@@ -204,4 +124,4 @@ GenerateProjectFiles.bat
 
 ---
 
-**Made with ❤️ and Unreal Engine**
+
