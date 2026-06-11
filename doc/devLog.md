@@ -366,3 +366,59 @@
     }
 }
 >```
+
+## 2026-6-11
+使用GameInstance完成昨天没完成的切换关卡关闭状态widget显示。
+>```
+>UCLASS()
+>class DONTLETMEGO_API UDontLetMeGoGameInstance : public >UGameInstance
+>{
+>	GENERATED_BODY()
+>	
+>public:
+>	bool bIsWake=false;
+>	void ChangeMap();
+>
+>};
+>void UDontLetMeGoGameInstance::ChangeMap(){
+>    bIsWake=true;
+>
+>    UWorld* World=GetWorld();
+>    if(!World)return;
+>
+>    if(bIsWake){
+>        UGameplayStatics::OpenLevel(World,FName("RoomMap"));
+>
+>    }else{
+>        UGameplayStatics::OpenLevel(World,FName("IslandMap"));
+>    }
+>
+>
+>}
+>
+>	if(Hunger.CurrentValue<=0||Thirst.CurrentValue||Spirit.CurrentValue){
+>		UDontLetMeGoGameInstance*GI=Cast<UDontLetMeGoGameInstance>(GetWorld()>->GetGameInstance());
+>		if(GI){
+>			GI->ChangeMap();
+>		}
+>	}
+>
+>
+>	UDontLetMeGoGameInstance* GI=Cast<UDontLetMeGoGameInstance>>(GetGameInstance());
+>	
+>	if(StatusWidgetClass&&GI&&!GI->bIsWake)
+>```
+
+耐力值到0时无法移动
+>```
+>if (StatusComponent)
+>	{	
+>    	StatusComponent->SetMoving(
+>        	!MovementVector.IsNearlyZero()
+>    	);
+>		if(StatusComponent->Stamina.CurrentValue<=0){
+>			return;
+>		}
+>	}
+>```
+今天实现游戏开始菜单
