@@ -6,7 +6,7 @@
 
 USTRUCT(BlueprintType)
 struct FStatusValue{
-	GENERATED_BODY();
+	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	float CurrentValue=100.f;

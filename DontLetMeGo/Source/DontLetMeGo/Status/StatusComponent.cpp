@@ -2,6 +2,8 @@
 
 
 #include "StatusComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "../GameInstance/DontLetMeGoGameInstance.h"
 
 // Sets default values for this component's properties
 UStatusComponent::UStatusComponent()
@@ -32,8 +34,11 @@ void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Hunger.CurrentValue -= DeltaTime * 0.1f;
 	Thirst.CurrentValue -= DeltaTime * 0.2f;
 	Spirit.CurrentValue -= DeltaTime * 0.05f;
-	if(Hunger.CurrentValue<=0){
-		bIsDead=true;
+	if(Hunger.CurrentValue<=0||Thirst.CurrentValue<=0||Spirit.CurrentValue<=0){
+		UDontLetMeGoGameInstance* GI=Cast<UDontLetMeGoGameInstance>(GetWorld()->GetGameInstance());
+		if(GI){
+			GI->ChangeMap();
+		}
 	}
 	if (bIsMoving)
 	{

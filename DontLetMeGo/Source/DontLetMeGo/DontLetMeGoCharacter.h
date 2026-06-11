@@ -103,7 +103,6 @@ private:
 	UPROPERTY()
 	AFollowCameraActor* FollowCameraActor;
 
-	bool bIsChangingLevel = false;
 protected:
 	void ToggleInventory();
 	void PickUp();

@@ -3,11 +3,11 @@
 #include "DontLetMeGoCharacter.h"
 
 #include "Kismet/KismetSystemLibrary.h"
-#include "Kismet/GameplayStatics.h"
 #include "myCamera/FollowCameraActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Inventory/InventoryComponent.h"
 #include "Status/StatusComponent.h"
+#include "GameInstance/DontLetMeGoGameInstance.h"
 #include "Items/PickupItem.h"
 #include "UI/InventoryWidget.h"
 #include "UI/StatusWidget.h"
@@ -27,8 +27,6 @@
 
 ADontLetMeGoCharacter::ADontLetMeGoCharacter()
 {
-
-	PrimaryActorTick.bCanEverTick = true;
 
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -93,7 +91,9 @@ void ADontLetMeGoCharacter::BeginPlay()
 			}
 		}
 
-	if(StatusWidgetClass){
+	UDontLetMeGoGameInstance* GI=Cast<UDontLetMeGoGameInstance>(GetGameInstance());
+	
+	if(StatusWidgetClass&&GI&&!GI->bIsWake){
 		StatusWidget=CreateWidget<UStatusWidget>(
 			GetWorld(),
 			StatusWidgetClass
@@ -106,31 +106,6 @@ void ADontLetMeGoCharacter::BeginPlay()
 
 
 	
-}
-
-void ADontLetMeGoCharacter::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-
-
-    if (bIsChangingLevel)
-    {
-        return;
-    }
-
-    if (StatusComponent &&
-        StatusComponent->Hunger.CurrentValue <= 0.f)
-    {
-        bIsChangingLevel = true;
-		if (StatusWidget)
-{
-    StatusWidget->SetVisibility(ESlateVisibility::Hidden);
-}	
-        UGameplayStatics::OpenLevel(
-            GetWorld(),
-            FName("RoomMap")
-        );
-    }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -170,14 +145,18 @@ void ADontLetMeGoCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 }
 
 void ADontLetMeGoCharacter::Move(const FInputActionValue& Value)
-{
+{	
+
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	if (StatusComponent)
-	{
+	{	
     	StatusComponent->SetMoving(
         	!MovementVector.IsNearlyZero()
     	);
+		if(StatusComponent->Stamina.CurrentValue<=0){
+			return;
+		}
 	}
 	if (Controller != nullptr)
 	{
@@ -387,14 +366,3 @@ void ADontLetMeGoCharacter::PrintInventory(){
 	UE_LOG(LogTemp,Warning,TEXT("============"));
 }
 
-void ADontLetMeGoCharacter::GoToRoom(){
-	
-	if(bIsChangingLevel){
-		return;
-	}
-	bIsChangingLevel=true;
-	UGameplayStatics::OpenLevel(
-        GetWorld(),
-        FName("RoomMap")
-    );
-}
