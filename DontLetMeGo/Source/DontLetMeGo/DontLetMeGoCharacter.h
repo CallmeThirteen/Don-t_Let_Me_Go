@@ -75,7 +75,7 @@ class ADontLetMeGoCharacter : public ACharacter
 	public:
 	ADontLetMeGoCharacter();
 	
-    virtual void Tick(float DeltaTime) override;
+
 
 protected:
 
@@ -108,7 +108,7 @@ protected:
 	void PickUp();
 	void PrintInventory();
 	void StopMove();
-	void GoToRoom();
+
 
 	UPROPERTY()
 	UUserWidget* InventoryWidget;

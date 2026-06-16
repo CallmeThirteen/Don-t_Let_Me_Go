@@ -422,3 +422,88 @@
 >	}
 >```
 今天实现游戏开始菜单
+
+## 2026-6-16
+
+这五天因为准备考试和组会汇报，没有进展，今天考完了也汇报完了，可以继续进行。
+
+今天目标实现游戏开始菜单。有多时间就继续实现使用物品功能和制作物品功能。
+
+实现了游戏开始菜单，点击开始按钮跳转到roommap
+>```
+>void UDontLetMeGoGameInstance::Init(){
+>    Super::Init();
+>    FTimerHandle MenuTimer;
+>    GetTimerManager().SetTimer(MenuTimer, this,&UDontLetMeGoGameInstance::ShowMenuWidget,0.2f,false);
+>
+>}
+>
+>void UDontLetMeGoGameInstance::ShowMenuWidget(){
+>    if(bMenuShow){return ;}
+>    FString CurrentMap = GetWorld()->GetMapName();
+>    CurrentMap.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+>    if(!CurrentMap.Contains("Menu")&&!CurrentMap.Contains("MainMenu")){
+>        return;
+>    }
+>     if(MenuWidgetClass){
+>        UUserWidget* Menu=CreateWidget<UUserWidget>>(this,MenuWidgetClass);
+>        if(Menu){
+>            Menu->AddToViewport();
+>            
+>            if(APlayerController* PC=GetWorld()->GetFirstPlayerController()){
+>                PC->bShowMouseCursor = true;
+>
+>                FInputModeUIOnly InputMode;
+>                InputMode.SetWidgetToFocus>(Menu->TakeWidget());
+>                InputMode.SetLockMouseToViewportBehavior>(EMouseLockMode::DoNotLock);
+>                PC->SetInputMode(InputMode);
+>        
+>    }
+>    }   
+>    }
+>}
+>
+>void UDontLetMeGoGameInstance::StartGame(){
+>    if(APlayerController* PC=GetWorld()->GetFirstPlayerController()){
+>        PC->bShowMouseCursor = false;
+>        FInputModeGameOnly InputMode;
+>        PC->SetInputMode(InputMode);
+>    }
+>    bMenuShow = false;
+>    UGameplayStatics::OpenLevel(GetWorld(),FName>("RoomMap"));
+>}
+>
+>void UDontLetMeGoGameInstance::QuitGame(){
+>    UKismetSystemLibrary::QuitGame(GetWorld(),nullptr,EQuitPreference::Quit,false);
+>}
+>
+>void UMenuWidget::NativeConstruct(){
+>    Super::NativeConstruct();
+>
+>    if(StartButton){
+>        StartButton->OnClicked.AddDynamic(
+>            this,
+>            &UMenuWidget::OnStartClicked
+>        );
+>    }
+>    if(QuitButton){
+>        QuitButton->OnClicked.AddDynamic(
+>            this,
+>            &UMenuWidget::OnQuitClicked
+>        );
+>    }
+>}
+>
+>void UMenuWidget::OnStartClicked(){
+>    if(UDontLetMeGoGameInstance* GI = GetGameInstance<UDontLetMeGoGameInstance>()){
+>        GI->StartGame();
+>    }
+>
+>}
+>
+>void UMenuWidget::OnQuitClicked(){
+>    if(UDontLetMeGoGameInstance* GI = GetGameInstance<UDontLetMeGoGameInstance>()){
+>        GI->QuitGame();
+>    }
+>}
+>```

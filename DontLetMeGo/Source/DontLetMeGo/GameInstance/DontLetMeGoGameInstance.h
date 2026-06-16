@@ -14,8 +14,26 @@ class DONTLETMEGO_API UDontLetMeGoGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 	
+	bool bMenuShow = false;
+protected:
+	virtual void Init() override;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> MenuWidgetClass;
+
+	
 public:
+	UFUNCTION()
+	void ShowMenuWidget();
+
+	UFUNCTION(BlueprintCallable)
+	void StartGame();
+	
+	UFUNCTION(BlueprintCallable)
+	void QuitGame();
+
 	bool bIsWake=false;
 	void ChangeMap();
+
 
 };
