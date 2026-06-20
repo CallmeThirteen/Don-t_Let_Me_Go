@@ -9,6 +9,7 @@
 #include "Status/StatusComponent.h"
 #include "GameInstance/DontLetMeGoGameInstance.h"
 #include "Items/PickupItem.h"
+#include "Items/BedActor.h"
 #include "UI/InventoryWidget.h"
 #include "UI/StatusWidget.h"
 #include "DrawDebugHelpers.h"
@@ -243,7 +244,7 @@ void ADontLetMeGoCharacter::PickUp(){
 	FVector Start = GetActorLocation();
 	FVector End = Start;
 	FHitResult Hit;
-
+	AActor* CurrentInterActor = nullptr;
 	bool bHit = UKismetSystemLibrary::SphereTraceSingle(
 		GetWorld(),
 		Start,
@@ -262,6 +263,30 @@ void ADontLetMeGoCharacter::PickUp(){
 	}
 	if(bHit){
 		AActor* HitActor = Hit.GetActor();
+		
+		ABedActor* Bed=Cast<ABedActor>(HitActor);
+		if(Bed){
+			UDontLetMeGoGameInstance* GI=Cast<UDontLetMeGoGameInstance>(GetWorld()->GetGameInstance());
+			
+			if(GI){
+				
+				GI->ChangetoIslandMap();
+			}
+			if(GEngine){
+				FString PickupInfo=FString::Printf(
+					TEXT("梦回孤岛！")
+				);
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					6.f,
+					FColor::Green,
+					PickupInfo
+				);
+			}
+			
+		}
+
+
 		APickupItem* Item=Cast<APickupItem>(HitActor);
 		if(Item){
 			InventoryComponent->AddItem(Item->ItemID,1);

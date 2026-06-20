@@ -53,19 +53,21 @@ void UDontLetMeGoGameInstance::QuitGame(){
     UKismetSystemLibrary::QuitGame(GetWorld(),nullptr,EQuitPreference::Quit,false);
 }
 
-void UDontLetMeGoGameInstance::ChangeMap(){
+void UDontLetMeGoGameInstance::ChangetoRoomMap(){
     bIsWake=true;
 
     UWorld* World=GetWorld();
     if(!World)return;
+    UGameplayStatics::OpenLevel(World,FName("RoomMap"));
 
-    if(bIsWake){
-        UGameplayStatics::OpenLevel(World,FName("RoomMap"));
+}
 
-    }else{
-        UGameplayStatics::OpenLevel(World,FName("IslandMap"));
-    }
+void UDontLetMeGoGameInstance::ChangetoIslandMap(){
+    bIsWake=false;
 
+    UWorld* World=GetWorld();
+    if(!World)return;
+    UGameplayStatics::OpenLevel(World,FName("ThirdPersonMap"));
 
 }
 

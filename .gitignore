@@ -12,6 +12,8 @@ Binaries/
 DerivedDataCache/
 Intermediate/
 Saved/
+.uasset
+.umap
 
 # Build files
 Build/

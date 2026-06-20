@@ -507,3 +507,91 @@
 >    }
 >}
 >```
+
+## 2026-6-17
+今天要完成优化开始菜单和实现入睡传送荒岛地图的功能。
+
+开始菜单用另外的地图展示，布置了基础场景和摄影机。
+
+实现了入睡传送到孤岛的功能
+
+
+## 2026-6-20
+今天通过重叠事件方式实现了显示交互信息的功能，靠近床显示“按E 入睡”。
+>1. 重叠事件
+>```
+>	UPROPERTY(VisibleAnywhere)
+>	class USphereComponent* InteractionSphere;
+>BedMesh = CreateDefaultSubobject<UStaticMeshComponent>(
+>		TEXT("BedMesh")
+>	);
+>	RootComponent = BedMesh;
+>	InteractionSphere=CreateDefaultSubobject<USphereComponent>>(TEXT("InteractionSphere"));
+>	InteractionSphere->SetupAttachment(BedMesh);
+>	InteractionSphere->SetSphereRadius(200.f);
+>	
+>	InteractionSphere->OnComponentBeginOverlap.
+>	AddDynamic(
+>   	 this,
+>   	 &ABedActor::OnBeginOverlap
+>	);
+>
+>	InteractionSphere->OnComponentEndOverlap.
+>	AddDynamic(
+>    	this,
+>  	  &ABedActor::OnEndOverlap
+>	);
+>
+>
+>```
+>2. 显示交互信息
+>```
+>    UPROPERTY(VisibleAnywhere,Category= UI)
+>	class UWidgetComponent* InteractPromptWidget;
+>
+>    InteractPromptWidget=CreateDefaultSubobject<UWidgetComponent>>(TEXT("InteractPrompt"));
+>	InteractPromptWidget->SetupAttachment(RootComponent);
+>	InteractPromptWidget->SetWidgetSpace(EWidgetSpace::Screen);
+>	InteractPromptWidget->SetDrawSize(FVector2D(200,50));
+>	InteractPromptWidget->SetVisibility(false);
+>
+>
+>    void ABedActor::OnBeginOverlap(
+>    UPrimitiveComponent* OverlappedComp,
+>    AActor* OtherActor,
+>    UPrimitiveComponent* OtherComp,
+>    int32 OtherBodyIndex,
+>    bool bFromSweep,
+>    const FHitResult& SweepResult
+>)
+>{
+>	InteractPromptWidget->SetVisibility(true);
+>    if(GEngine){
+>		FString BedInfo=FString::Printf(TEXT("Sleep!"));
+>		GEngine->AddOnScreenDebugMessage(
+>			-1,
+>			2.f,
+>			FColor::Yellow,
+>			BedInfo	
+>		);
+>	}
+>}
+>void ABedActor::OnEndOverlap(
+>    UPrimitiveComponent* OverlappedComp,
+>    AActor* OtherActor,
+>    UPrimitiveComponent* OtherComp,
+>    int32 OtherBodyIndex
+>)
+>{	
+>	InteractPromptWidget->SetVisibility(false);
+>    if(GEngine){
+>		FString BedInfo=FString::Printf(TEXT("Wake Up!"));
+>		GEngine->AddOnScreenDebugMessage(
+>			-1,
+>			2.f,
+>			FColor::Yellow,
+>			BedInfo	
+>		);
+>	}
+>}
+>```

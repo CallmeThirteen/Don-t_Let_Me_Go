@@ -32,8 +32,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void QuitGame();
 
-	bool bIsWake=false;
-	void ChangeMap();
+	bool bIsWake=true;
 
+	void ChangetoRoomMap();
+
+	void ChangetoIslandMap();
 
 };

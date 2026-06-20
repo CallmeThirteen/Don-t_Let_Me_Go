@@ -30,15 +30,16 @@ void UStatusComponent::BeginPlay()
 void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	UDontLetMeGoGameInstance* GI=Cast<UDontLetMeGoGameInstance>(GetWorld()->GetGameInstance());
+	if(GI&&GI->bIsWake){
+		return ;
+	}
 	Hunger.CurrentValue -= DeltaTime * 0.1f;
 	Thirst.CurrentValue -= DeltaTime * 0.2f;
 	Spirit.CurrentValue -= DeltaTime * 0.05f;
+	
 	if(Hunger.CurrentValue<=0||Thirst.CurrentValue<=0||Spirit.CurrentValue<=0){
-		UDontLetMeGoGameInstance* GI=Cast<UDontLetMeGoGameInstance>(GetWorld()->GetGameInstance());
-		if(GI){
-			GI->ChangeMap();
-		}
+		GI->ChangetoRoomMap();
 	}
 	if (bIsMoving)
 	{
