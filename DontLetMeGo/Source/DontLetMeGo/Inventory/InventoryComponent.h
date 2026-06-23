@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -9,56 +7,56 @@
 #include "InventoryComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+    FOnItemUsedDelegate,
+    int32,
+    SlotIndex,
+    FName,
+    ItemID
+);
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DONTLETMEGO_API UInventoryComponent : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UInventoryComponent();
+public:
+    UInventoryComponent();
+    virtual void BeginPlay() override;
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+    UPROPERTY(BlueprintReadOnly)
+    TArray<FInventorySlot> Slots;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+    UPROPERTY(EditDefaultsOnly, Category="Inventory")
+    UDataTable* ItemDataTable;
 
+    UFUNCTION(BlueprintCallable)
+    bool AddItem(FName ItemID, int32 Count);
 
+    UFUNCTION(BlueprintCallable)
+    bool UseItemAt(int32 SlotIndex);
 
-UPROPERTY(BlueprintReadOnly)
-TArray<FInventorySlot> Slots;
+    UFUNCTION(BlueprintCallable)
+    bool UseItemByID(FName ItemID, int32 Count);
 
-UPROPERTY(EditDefaultsOnly,Category="Inventory")
-UDataTable* ItemDataTable;
-
-UFUNCTION(BlueprintCallable)
-bool AddItem(
-    FName ItemID,
-    int32 Count
-);
-
-UFUNCTION(BlueprintCallable)
-bool RemoveItem(
-    FName ItemID,
-    int32 Count
-);
+    UFUNCTION(BlueprintPure)
+    bool CanUseItem() const;
 
 
-UFUNCTION(BlueprintCallable)
-int32 GetItemCount(
-    FName ItemID
-) const;
+    UPROPERTY(BlueprintAssignable)
+   FOnItemUsedDelegate OnItemUsed;
 
+    UFUNCTION(BlueprintCallable, Category="Inventory")
+    void ExecuteItemEffect(const FItemData& ItemData, APawn* User);
 
-const FItemData* GetItemData(FName ItemID)const;
+    UFUNCTION(BlueprintCallable)
+    bool RemoveItem(FName ItemID, int32 Count);
 
-const TArray<FInventorySlot>&
-GetSlots() const{
-    return Slots;
-}
+    UFUNCTION(BlueprintCallable)
+    int32 GetItemCount(FName ItemID) const;
 
-		
+    const FItemData* GetItemData(FName ItemID) const;
+
+    UFUNCTION(BlueprintCallable)
+    const TArray<FInventorySlot>& GetSlots() const { return Slots; }
 };

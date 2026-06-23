@@ -30,6 +30,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly)
+	FStatusValue Health;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly)
 	FStatusValue Hunger;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly)

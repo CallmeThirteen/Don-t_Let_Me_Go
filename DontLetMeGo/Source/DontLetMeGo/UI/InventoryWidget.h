@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,31 +6,65 @@
 #include "Blueprint/UserWidget.h"
 #include "InventoryWidget.generated.h"
 
-/**
- * 
- */
-class UScrollBox;
+class UUniformGridPanel;
 class UItemEntryWidget;
-class UInventoryComponent;
+
 UCLASS()
 class DONTLETMEGO_API UInventoryWidget : public UUserWidget
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UPROPERTY(Meta = (BindWidget))
-	UScrollBox* ItemList;
+    // ✅ 只保留这一个
+    UPROPERTY()
+    UInventoryComponent* InventoryComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Inventory")
-	TSubclassOf<UItemEntryWidget> ItemEntryClass;
-	
-	UPROPERTY()
-	UInventoryComponent* InventoryComponent;
+    UFUNCTION(BlueprintCallable)
+    void RefreshInventory(const TArray<FInventorySlot>& Items);
 
-	void RefreshInventory(const TArray<FInventorySlot>& Items);
+    UFUNCTION(BlueprintCallable)
+    void SetInventoryComponent(UInventoryComponent* InComponent);
 
-	void SetInventoryComponent(
-		UInventoryComponent* InComponent
-	);
+    UFUNCTION(BlueprintImplementableEvent)
+    void OnSlotClicked(int32 SlotIndex);
 
+    UFUNCTION(BlueprintImplementableEvent)
+    void OnSlotRightClicked(int32 SlotIndex);
+
+
+protected:
+    virtual void NativeConstruct() override;
+
+    UItemEntryWidget* CreateSlotWidget(int32 SlotIndex);
+    void GetGridPosition(int32 SlotIndex, int32& OutRow, int32& OutColumn) const;
+
+    UPROPERTY(meta = (BindWidget))
+    UUniformGridPanel* ItemGrid;
+    
+    UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+    TSubclassOf<UItemEntryWidget> ItemEntryClass;
+    
+    UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+    int32 GridColumns = 10;
+    
+    UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+    int32 MaxSlots = 40;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+	int32 SelectedSlot = -1;
+    
+    UPROPERTY()
+    TArray<UItemEntryWidget*> SlotWidgets;
+
+    UFUNCTION()
+    void HandleSlotClicked(int32 SlotIndex);
+
+    UFUNCTION()
+    void HandleSlotRightClicked(int32 SlotIndex);
+
+    UFUNCTION()
+void HandleInventoryChanged(
+    int32 SlotIndex,
+    FName ItemID
+);
 };

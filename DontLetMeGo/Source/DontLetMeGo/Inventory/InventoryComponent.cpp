@@ -1,105 +1,182 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "InventoryComponent.h"
 
-// Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+    PrimaryComponentTick.bCanEverTick = false;
 }
 
-
-// Called when the game starts
 void UInventoryComponent::BeginPlay()
 {
-	Super::BeginPlay();
-
-	// ...
-	
+    Super::BeginPlay();
 }
 
-
-// Called every frame
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-bool UInventoryComponent::AddItem(
-	FName ItemID,
-	int32 Count
-){
-	if(Count<0){
-		return false;
-	}
-	const FItemData* Data = GetItemData(ItemID);
-	if(!Data)return false;
-	int32 MaxStack = Data->MaxStack;
-	for(FInventorySlot& Slot:Slots){
-		if(Slot.ItemID!=ItemID){
-			continue;
-		}
-		if(Slot.Count>=MaxStack){
-			continue;
-		}
-		int32 SpaceLeft=MaxStack-Slot.Count;
-		if(Count<=SpaceLeft){
-			Slot.Count+=Count;
-			return true;
-		}
-		Slot.Count=MaxStack;
-		Count -=SpaceLeft;
-	}
-	while(Count>0){
-		FInventorySlot NewSlot;
-		NewSlot.ItemID = ItemID;
-		if(Count>MaxStack){
-			NewSlot.Count=MaxStack;
-			Count-=MaxStack;
-		}else{
-			NewSlot.Count=Count;
-			Count=0;
-		}
-		Slots.Add(NewSlot);
-	}
-	return true;
+bool UInventoryComponent::AddItem(FName ItemID, int32 Count)
+{
+    if (Count <= 0) return false;
+    
+    const FItemData* Data = GetItemData(ItemID);
+    if (!Data) return false;
+    
+    int32 MaxStack = Data->MaxStack;
+    
+    for (FInventorySlot& Slot : Slots)
+    {
+        if (Slot.ItemID != ItemID) continue;
+        if (Slot.Count >= MaxStack) continue;
+        
+        int32 SpaceLeft = MaxStack - Slot.Count;
+        if (Count <= SpaceLeft)
+        {
+            Slot.Count += Count;
+            OnItemUsed.Broadcast(-1, ItemID); 
+            return true;
+        }
+        Slot.Count = MaxStack;
+        Count -= SpaceLeft;
+    }
+    
+  
+    while (Count > 0)
+    {
+        FInventorySlot NewSlot;
+        NewSlot.ItemID = ItemID;
+        NewSlot.Count = FMath::Min(Count, MaxStack);
+        Count -= NewSlot.Count;
+        Slots.Add(NewSlot);
+    }
+    
+    OnItemUsed.Broadcast(-1, ItemID);
+    return true;
 }
 
-bool UInventoryComponent::RemoveItem(
-	FName ItemID,
-	int32 Count
-){
-	for(int32 i=0;i<Slots.Num();i++){
-		if(Slots[i].ItemID == ItemID){
-			Slots[i].Count -= Count;
-			if(Slots[i].Count<=0){
-				Slots.RemoveAt(i);
-			}
-			return true;
-		}
-	}
-	return false;
+bool UInventoryComponent::UseItemAt(int32 SlotIndex)
+{
+    if (!Slots.IsValidIndex(SlotIndex)) return false;
+    
+    FInventorySlot& Slot = Slots[SlotIndex];
+    if (Slot.ItemID.IsNone() || Slot.Count <= 0) return false;
+    
+    const FItemData* ItemData = GetItemData(Slot.ItemID);
+    if (!ItemData) return false;
+    if (!ItemData->bUsable) return false;
+    
+    APawn* UserPawn = Cast<APawn>(GetOwner());
+    if (!UserPawn) return false;
+    
+    ExecuteItemEffect(*ItemData, UserPawn);
+    
+    Slot.Count--;
+    if (Slot.Count <= 0)
+    {
+        Slot.ItemID = NAME_None;
+        Slot.Count = 0;
+    }
+    
+    OnItemUsed.Broadcast(SlotIndex, ItemData->ItemID);
+    return true;
 }
 
-int32 UInventoryComponent::GetItemCount(FName ItemID) const{
-	for(const FInventorySlot& Slot:Slots){
-		if(Slot.ItemID == ItemID){
-			return Slot.Count;
-		}
-	}
-	return 0;
+bool UInventoryComponent::UseItemByID(FName ItemID, int32 Count)
+{
+    if (ItemID.IsNone() || Count <= 0)
+    {
+        return false;
+    }
+
+    for (int32 UsedCount = 0; UsedCount < Count; ++UsedCount)
+    {
+        bool bUsedOne = false;
+
+        for (int32 i = 0; i < Slots.Num(); ++i)
+        {
+            if (Slots[i].ItemID == ItemID && Slots[i].Count > 0)
+            {
+                bUsedOne = UseItemAt(i);
+                break;
+            }
+        }
+
+        if (!bUsedOne)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
-const FItemData* UInventoryComponent::GetItemData(FName ItemID)const{
-	if(!ItemDataTable){
-		return nullptr;
-	}
-	return ItemDataTable->FindRow<FItemData>(ItemID,TEXT(""));
+bool UInventoryComponent::CanUseItem() const
+{
+    for (const FInventorySlot& Slot : Slots)
+    {
+        if (!Slot.ItemID.IsNone() && Slot.Count > 0)
+        {
+            const FItemData* Data = GetItemData(Slot.ItemID);
+            if (Data && Data->bUsable)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void UInventoryComponent::ExecuteItemEffect(const FItemData& ItemData, APawn* User)
+{
+    // 这里写物品使用的效果
+    // 比如：恢复生命值、增加buff等
+    // 暂时空实现，或者打印调试信息
+    
+    if (GEngine)
+    {
+        FString Msg = FString::Printf(TEXT("使用物品: %s"), *ItemData.DisplayName.ToString());
+        GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, Msg);
+    }
+    
+    // TODO: 根据 ItemData 执行具体效果
+    // 比如：调用 User 上的 HealthComponent 加血
+    // 或者：生成一个 Actor 效果
+}
+
+bool UInventoryComponent::RemoveItem(FName ItemID, int32 Count)
+{
+    for (int32 i = 0; i < Slots.Num(); i++)
+    {
+        if (Slots[i].ItemID == ItemID)
+        {
+            Slots[i].Count -= Count;
+            if (Slots[i].Count <= 0)
+            {
+                Slots.RemoveAt(i);
+            }
+            OnItemUsed.Broadcast(i, ItemID);
+            return true;
+        }
+    }
+    return false;
+}
+
+int32 UInventoryComponent::GetItemCount(FName ItemID) const
+{
+    int32 Total = 0;
+    for (const FInventorySlot& Slot : Slots)
+    {
+        if (Slot.ItemID == ItemID)
+        {
+            Total += Slot.Count;
+        }
+    }
+    return Total;
+}
+
+const FItemData* UInventoryComponent::GetItemData(FName ItemID) const
+{
+    if (!ItemDataTable) return nullptr;
+    return ItemDataTable->FindRow<FItemData>(ItemID, TEXT(""));
 }
