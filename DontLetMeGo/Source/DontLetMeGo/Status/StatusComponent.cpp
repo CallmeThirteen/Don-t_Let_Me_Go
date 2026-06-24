@@ -61,4 +61,38 @@ Stamina.CurrentValue = FMath::Clamp(
 void UStatusComponent::SetMoving(bool bMoving){
 	bIsMoving = bMoving;
 }
+void UStatusComponent::AddHunger(float Value)
+{
+    Hunger.CurrentValue = FMath::Clamp(
+        Hunger.CurrentValue + Value,
+        0.f,
+        Hunger.MaxValue
+    );
+}
 
+void UStatusComponent::AddThirst(float Value)
+{
+    Thirst.CurrentValue = FMath::Clamp(
+        Thirst.CurrentValue + Value,
+        0.f,
+        Thirst.MaxValue
+    );
+}
+
+void UStatusComponent::AddSpirit(float Value)
+{
+    Spirit.CurrentValue = FMath::Clamp(
+        Spirit.CurrentValue + Value,
+        0.f,
+        Spirit.MaxValue
+    );
+}
+
+void UStatusComponent::AddStamina(float Value)
+{
+    Stamina.CurrentValue = FMath::Clamp(
+        Stamina.CurrentValue + Value,
+        0.f,
+        Stamina.MaxValue
+    );
+}

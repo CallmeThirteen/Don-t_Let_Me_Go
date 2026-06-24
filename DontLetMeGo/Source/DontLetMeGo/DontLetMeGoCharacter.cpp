@@ -230,7 +230,13 @@ void ADontLetMeGoCharacter::ToggleInventory(){
 		bInventoryOpen = true;
 	}
 	else{
+		UInventoryWidget* InvWidget = Cast<UInventoryWidget>(InventoryWidget);
+		if(InvWidget){
+			InvWidget->CloseItemInfo();
+		}
+		 
 		InventoryWidget->RemoveFromParent();
+		
 		if(APlayerController* PC = Cast<APlayerController>(GetController())){
 			PC->bShowMouseCursor=false;
 			PC->SetInputMode(FInputModeGameOnly());

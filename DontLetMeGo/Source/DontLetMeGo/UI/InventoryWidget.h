@@ -4,6 +4,7 @@
 #include "../Inventory/InventoryComponent.h"
 #include "../Inventory/InventoryTypes.h"
 #include "Blueprint/UserWidget.h"
+#include "ItemInfoWidget.h"
 #include "InventoryWidget.generated.h"
 
 class UUniformGridPanel;
@@ -23,6 +24,9 @@ public:
     void RefreshInventory(const TArray<FInventorySlot>& Items);
 
     UFUNCTION(BlueprintCallable)
+    void CloseItemInfo();
+
+    UFUNCTION(BlueprintCallable)
     void SetInventoryComponent(UInventoryComponent* InComponent);
 
     UFUNCTION(BlueprintImplementableEvent)
@@ -35,6 +39,11 @@ public:
 protected:
     virtual void NativeConstruct() override;
 
+    virtual FReply NativeOnMouseButtonDown(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent
+    ) override;
+
     UItemEntryWidget* CreateSlotWidget(int32 SlotIndex);
     void GetGridPosition(int32 SlotIndex, int32& OutRow, int32& OutColumn) const;
 
@@ -44,6 +53,12 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Inventory")
     TSubclassOf<UItemEntryWidget> ItemEntryClass;
     
+    UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+    TSubclassOf<UItemInfoWidget> ItemInfoWidgetClass;
+
+    UPROPERTY()
+    UItemInfoWidget* ItemInfoWidget;
+
     UPROPERTY(EditDefaultsOnly, Category = "Inventory")
     int32 GridColumns = 10;
     

@@ -51,5 +51,13 @@ public:
 	}
 	bool bIsDead=false;
 	
-	
+	public:
+
+    void AddHunger(float Value);
+
+    void AddThirst(float Value);
+
+    void AddSpirit(float Value);
+
+    void AddStamina(float Value);
 };

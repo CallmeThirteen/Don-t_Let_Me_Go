@@ -27,6 +27,10 @@ FReply UItemEntryWidget::NativeOnMouseButtonDown(
         return FReply::Handled();
     }
 
+
+    return Super::NativeOnMouseButtonDown(
+        InGeometry,
+        InMouseEvent);
     return Super::NativeOnMouseButtonDown(
         InGeometry,
         InMouseEvent);

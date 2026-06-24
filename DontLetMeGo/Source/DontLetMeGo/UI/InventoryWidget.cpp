@@ -1,7 +1,9 @@
 #include "InventoryWidget.h"
 #include "ItemEntryWidget.h"
+#include "ItemInfoWidget.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
+
 
 void UInventoryWidget::NativeConstruct()
 {
@@ -30,9 +32,26 @@ void UInventoryWidget::NativeConstruct()
             }
         }
     }
+
+    
     if(InventoryComponent){
     RefreshInventory(InventoryComponent->GetSlots());
     }
+}
+
+FReply UInventoryWidget::NativeOnMouseButtonDown(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if(ItemInfoWidget)
+{
+    ItemInfoWidget->RemoveFromParent();
+    ItemInfoWidget = nullptr;
+}
+
+    return Super::NativeOnMouseButtonDown(
+        InGeometry,
+        InMouseEvent);
 }
 
 void UInventoryWidget::RefreshInventory(const TArray<FInventorySlot>& Items)
@@ -85,7 +104,95 @@ void UInventoryWidget::GetGridPosition(int32 SlotIndex, int32& OutRow, int32& Ou
     OutColumn = SlotIndex % GridColumns;
 }
 
+void UInventoryWidget::CloseItemInfo(){
+    if(ItemInfoWidget)
+    {
+        ItemInfoWidget->RemoveFromParent();
+        ItemInfoWidget = nullptr;
+    }
+}
+
 void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
+{   
+    if (ItemInfoWidget)
+    {
+    ItemInfoWidget->RemoveFromParent();
+    ItemInfoWidget = nullptr;
+
+    }
+    SelectedSlot = SlotIndex;
+
+    for (int32 i = 0; i < SlotWidgets.Num(); i++)
+    {
+        if (SlotWidgets[i])
+        {
+            SlotWidgets[i]->SetSelected(
+                i == SelectedSlot
+            );
+        }
+    }
+    
+    OnSlotClicked(SlotIndex);
+    
+    if(!InventoryComponent)
+    {
+        return;
+    }
+
+    const TArray<FInventorySlot>& InfoSlots =
+        InventoryComponent->GetSlots();
+
+    if(!InfoSlots.IsValidIndex(SlotIndex))
+    {
+        return;
+    }
+
+    const FInventorySlot& InfoSlot = InfoSlots[SlotIndex];
+    if(InfoSlot.ItemID.IsNone()||InfoSlot.Count<1){
+        
+        return;
+    }
+    
+
+    if(ItemInfoWidgetClass)
+    {
+        ItemInfoWidget =
+            CreateWidget<UItemInfoWidget>(
+                this,
+                ItemInfoWidgetClass
+            );
+
+    }
+    const FItemData* InfoData =
+        InventoryComponent->GetItemData(
+            InfoSlot.ItemID
+        );
+
+    if(InfoData && ItemInfoWidget)
+    {
+        ItemInfoWidget->SetItemInfo(
+            *InfoData
+        );
+        FVector2D MousePos;
+
+            GetOwningPlayer()->GetMousePosition(
+                MousePos.X,
+                MousePos.Y
+            );
+            ItemInfoWidget->SetPositionInViewport(
+            MousePos
+            );    
+            ItemInfoWidget->SetVisibility(
+                ESlateVisibility::HitTestInvisible
+            );
+            ItemInfoWidget->AddToViewport();
+        
+      
+    }
+    
+}
+
+void UInventoryWidget::HandleSlotRightClicked(int32 SlotIndex)
 {
     SelectedSlot = SlotIndex;
 
@@ -99,11 +206,6 @@ void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
         }
     }
 
-    OnSlotClicked(SlotIndex);
-}
-
-void UInventoryWidget::HandleSlotRightClicked(int32 SlotIndex)
-{
     OnSlotRightClicked(SlotIndex);
 }
 

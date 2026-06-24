@@ -1,4 +1,5 @@
 #include "InventoryComponent.h"
+#include "../Status/StatusComponent.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -131,7 +132,37 @@ void UInventoryComponent::ExecuteItemEffect(const FItemData& ItemData, APawn* Us
 {
     // 这里写物品使用的效果
     // 比如：恢复生命值、增加buff等
-    // 暂时空实现，或者打印调试信息
+   
+    if (!User)
+    {
+        return;
+    }
+    if(!ItemData.bUsable){
+        return;
+    }
+    UStatusComponent* Status =
+        User->FindComponentByClass<UStatusComponent>();
+
+    if (!Status)
+    {
+        return;
+    }
+    
+    Status->AddHunger(
+        ItemData.RecoverHunger
+    );
+
+    Status->AddThirst(
+        ItemData.RecoverThirst
+    );
+
+    Status->AddSpirit(
+        ItemData.RecoverSpirit
+    );
+
+    Status->AddStamina(
+        ItemData.RecoverStamina
+    );
     
     if (GEngine)
     {

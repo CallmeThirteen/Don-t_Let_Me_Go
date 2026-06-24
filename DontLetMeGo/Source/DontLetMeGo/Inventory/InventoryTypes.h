@@ -30,8 +30,22 @@ struct FItemData : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     int32 SellPrice = 0;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float RecoverHunger = 0.f;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float RecoverThirst = 0.f;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float RecoverSpirit = 0.f;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float RecoverStamina = 0.f;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly)  
     bool bUsable = false;
+
+    
 };
 
 USTRUCT(BlueprintType)
