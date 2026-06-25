@@ -12,8 +12,15 @@ Binaries/
 DerivedDataCache/
 Intermediate/
 Saved/
-*.uasset
-*.umap
+
+!Content/
+
+Content/*
+
+!Content/Blueprint/
+!Content/Data/
+!Content/ThirdPerson/
+!Content/UI/
 
 # Build files
 Build/
@@ -43,9 +50,6 @@ Thumbs.db
 *.pdb
 *.exe
 *.dll
-
-# Ignore shader cache
-DerivedDataCache/
 
 # Ignore crash reports
 crashinfo--*
