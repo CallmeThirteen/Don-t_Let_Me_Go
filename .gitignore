@@ -13,13 +13,16 @@ DerivedDataCache/
 Intermediate/
 Saved/
 
-!Content/
-Content/
-!Content/Blueprint/
-!Content/Data/
-!Content/ThirdPerson/
-!Content/UI/
-
+DontLetMeGo/Content/__ExternalActors__/
+DontLetMeGo/Content/__ExternalObjects__/
+DontLetMeGo/Content/Characters/
+DontLetMeGo/Content/CR/
+DontLetMeGo/Content/Developers/
+DontLetMeGo/Content/FreeAnimationLibrary/
+DontLetMeGo/Content/LevelPrototyping/
+DontLetMeGo/Content/LowpolyRealisticRock/
+DontLetMeGo/Content/Particles_Wind_Control_System/
+DontLetMeGo/Content/Stylized_Nature_Set/
 # Build files
 Build/
 
