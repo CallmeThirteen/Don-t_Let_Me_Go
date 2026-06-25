@@ -14,9 +14,7 @@ Intermediate/
 Saved/
 
 !Content/
-
-Content/*
-
+Content/
 !Content/Blueprint/
 !Content/Data/
 !Content/ThirdPerson/
