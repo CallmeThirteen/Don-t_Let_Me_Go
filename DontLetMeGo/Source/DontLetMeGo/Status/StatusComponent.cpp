@@ -26,7 +26,7 @@ void UStatusComponent::BeginPlay()
 }
 
 
-// Called every frame
+
 void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);

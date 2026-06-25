@@ -5,10 +5,12 @@
 #include "../Inventory/InventoryTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "ItemInfoWidget.h"
+#include "ItemUseInfoWidget.h"
 #include "InventoryWidget.generated.h"
 
 class UUniformGridPanel;
 class UItemEntryWidget;
+class UItemInfoWidget;
 
 UCLASS()
 class DONTLETMEGO_API UInventoryWidget : public UUserWidget
@@ -25,6 +27,14 @@ public:
 
     UFUNCTION(BlueprintCallable)
     void CloseItemInfo();
+    UFUNCTION(BlueprintCallable)
+    void CloseItemUseInfo();
+
+    UFUNCTION()
+    void OnUseClicked();    
+    UFUNCTION()
+    void OnDropClicked();
+ 
 
     UFUNCTION(BlueprintCallable)
     void SetInventoryComponent(UInventoryComponent* InComponent);
@@ -56,8 +66,14 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Inventory")
     TSubclassOf<UItemInfoWidget> ItemInfoWidgetClass;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+    TSubclassOf<UItemUseInfoWidget> ItemUseInfoWidgetClass;
+
     UPROPERTY()
     UItemInfoWidget* ItemInfoWidget;
+
+    UPROPERTY()
+    UItemUseInfoWidget* ItemUseInfoWidget;
 
     UPROPERTY(EditDefaultsOnly, Category = "Inventory")
     int32 GridColumns = 10;
@@ -68,6 +84,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	int32 SelectedSlot = -1;
     
+    UPROPERTY()
+    int32 SelectedUseSlot = INDEX_NONE;
+    UPROPERTY()
+    int32 SelectedDropSlot = INDEX_NONE;
+
     UPROPERTY()
     TArray<UItemEntryWidget*> SlotWidgets;
 

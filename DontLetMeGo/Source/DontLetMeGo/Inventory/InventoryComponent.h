@@ -50,6 +50,8 @@ public:
     void ExecuteItemEffect(const FItemData& ItemData, APawn* User);
 
     UFUNCTION(BlueprintCallable)
+    bool RemoveItemAt(int32 SlotIndex);
+    UFUNCTION(BlueprintCallable)
     bool RemoveItem(FName ItemID, int32 Count);
 
     UFUNCTION(BlueprintCallable)

@@ -233,6 +233,7 @@ void ADontLetMeGoCharacter::ToggleInventory(){
 		UInventoryWidget* InvWidget = Cast<UInventoryWidget>(InventoryWidget);
 		if(InvWidget){
 			InvWidget->CloseItemInfo();
+			InvWidget->CloseItemUseInfo();
 		}
 		 
 		InventoryWidget->RemoveFromParent();

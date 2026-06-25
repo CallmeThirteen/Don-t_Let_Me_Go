@@ -868,6 +868,192 @@ if (ItemInfoWidget)
 		}
 ```
 
+## 2026-6-25
+今天解决了很多问题。
+首先是livingcode同步问题，cscode一定是要用developmentEditor build，之前用的不是Editor，导致每次打开都不同步。
 
+实现了右键弹出使用和丢弃的按钮窗口，点击使用能够使用可使用物品，点击丢弃会丢弃物品。
+
+>1. 新建useWidgetClass文件
+> 在ItemUseInfoWidget.h中：
+>```
+>UCLASS()
+>class DONTLETMEGO_API UItemUseInfoWidget : public >UUserWidget
+>{
+>	GENERATED_BODY()
+>	
+>	UPROPERTY(meta=(BindWidget))
+>	class UButton* UseButton;
+>
+>	UPROPERTY(meta = (BindWidget))
+>	class UButton* DropButton;
+>
+> 	
+>public:
+>
+>	void NativeConstruct() override;
+>
+>	UFUNCTION()
+>	void HandleUseClicked();
+>
+>	UFUNCTION()
+>	void HandleDropClicked();
+>
+>	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUseClicked);
+>	DECLARE_DYNAMIC_MULTICAST_DELEGATE>(FOnDropClicked);
+>	
+>	UPROPERTY(BlueprintAssignable)
+>	FOnUseClicked OnUseClicked;
+>	
+>	UPROPERTY(BlueprintAssignable)
+>	FOnDropClicked OnDropClicked;
+>};
+>
+> 
+>```
+>.cpp中
+>```
+>    
+>void UItemUseInfoWidget::NativeConstruct(){
+>    Super::NativeConstruct();
+>
+>    if(UseButton){
+>        UseButton->OnClicked.AddDynamic(
+>            this,
+>            &UItemUseInfoWidget::HandleUseClicked
+>        );
+>    }
+>    if(DropButton){
+>        DropButton->OnClicked.AddDynamic(
+>            this,
+>            &UItemUseInfoWidget::HandleDropClicked
+>        );
+>    }
+>}
+>
+>void UItemUseInfoWidget::HandleUseClicked()
+>{
+>    OnUseClicked.Broadcast();
+>}
+>
+>void UItemUseInfoWidget::HandleDropClicked()
+>{
+>    OnDropClicked.Broadcast();
+>}
+>
+>```
+>2. 在InvnetoryWidgt.cpp中实现按钮弹窗和点击实现功能
+>
+>```
+>
+>void UInventoryWidget::HandleSlotRightClicked(int32 >SlotIndex)
+>{
+>    CloseItemInfo();
+>    CloseItemUseInfo();
+>    SelectedSlot = SlotIndex;
+>     SelectedDropSlot = SlotIndex;
+>     
+>    for (int32 i = 0; i < SlotWidgets.Num(); i++)
+>    {
+>        if (SlotWidgets[i])
+>        {
+>            SlotWidgets[i]->SetSelected(
+>                i == SelectedSlot
+>            );
+>        }
+>    }
+>    if(!InventoryComponent)
+>    {
+>        return;
+>    }
+>
+>    const TArray<FInventorySlot>& InfoSlots =
+>        InventoryComponent->GetSlots();
+>
+>    if(!InfoSlots.IsValidIndex(SlotIndex))
+>    {
+>        return;
+>    }
+>
+>    const FInventorySlot& InfoSlot = InfoSlots>[SlotIndex];
+>    if(InfoSlot.ItemID.IsNone()||InfoSlot.Count<1){
+>        
+>        return;
+>    }
+>    
+>
+>    if(ItemUseInfoWidgetClass)
+>    {
+>        ItemUseInfoWidget =
+>            CreateWidget<UItemUseInfoWidget>(
+>                this,
+>                ItemUseInfoWidgetClass
+>            );
+>
+>    }
+>    ItemUseInfoWidget->OnUseClicked.AddDynamic(
+>    this,
+>    &UInventoryWidget::OnUseClicked
+>    );
+>    
+>    ItemUseInfoWidget->OnDropClicked.AddDynamic(
+>        this,
+>        &UInventoryWidget::OnDropClicked
+>    );
+>
+>    const FItemData* InfoData =
+>        InventoryComponent->GetItemData(
+>            InfoSlot.ItemID
+>        );
+>
+>    if(InfoData && ItemUseInfoWidget)
+>    {
+>        
+>        FVector2D MousePos;
+>
+>            GetOwningPlayer()->GetMousePosition(
+>                MousePos.X,
+>                MousePos.Y
+>            );
+>            ItemUseInfoWidget->SetPositionInViewport(
+>            MousePos
+>            );    
+>            ItemUseInfoWidget->SetVisibility(
+>                ESlateVisibility::Visible
+>            );
+>            ItemUseInfoWidget->AddToViewport();
+>        
+>      
+>    }
+>    OnSlotRightClicked(SlotIndex);
+>}
+>
+>void UInventoryWidget::OnUseClicked()
+>{
+>    if(!InventoryComponent)
+>    {
+>        return;
+>    }
+>
+>    InventoryComponent->UseItemAt(
+>       SelectedUseSlot
+>    );
+>
+>    CloseItemUseInfo();
+>}
+>void UInventoryWidget::OnDropClicked()
+>{
+>    if(!InventoryComponent)
+>    {
+>        return;
+>    }
+>
+>    InventoryComponent->RemoveItemAt(
+>       SelectedDropSlot
+>    );
+>
+>    CloseItemUseInfo();
+>}
+>```
 
 

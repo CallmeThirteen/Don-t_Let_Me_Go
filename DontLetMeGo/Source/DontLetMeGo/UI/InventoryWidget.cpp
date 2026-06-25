@@ -46,6 +46,7 @@ FReply UInventoryWidget::NativeOnMouseButtonDown(
     if(ItemInfoWidget)
 {
     ItemInfoWidget->RemoveFromParent();
+    
     ItemInfoWidget = nullptr;
 }
 
@@ -111,7 +112,13 @@ void UInventoryWidget::CloseItemInfo(){
         ItemInfoWidget = nullptr;
     }
 }
-
+void UInventoryWidget::CloseItemUseInfo(){
+    if(ItemUseInfoWidget)
+    {
+        ItemUseInfoWidget->RemoveFromParent();
+        ItemUseInfoWidget = nullptr;
+    }
+}
 void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
 {   
     if (ItemInfoWidget)
@@ -120,8 +127,9 @@ void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
     ItemInfoWidget = nullptr;
 
     }
+    CloseItemUseInfo();
     SelectedSlot = SlotIndex;
-
+    SelectedUseSlot = SlotIndex;
     for (int32 i = 0; i < SlotWidgets.Num(); i++)
     {
         if (SlotWidgets[i])
@@ -194,8 +202,11 @@ void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
 
 void UInventoryWidget::HandleSlotRightClicked(int32 SlotIndex)
 {
+    CloseItemInfo();
+    CloseItemUseInfo();
     SelectedSlot = SlotIndex;
-
+     SelectedDropSlot = SlotIndex;
+     
     for (int32 i = 0; i < SlotWidgets.Num(); i++)
     {
         if (SlotWidgets[i])
@@ -205,8 +216,97 @@ void UInventoryWidget::HandleSlotRightClicked(int32 SlotIndex)
             );
         }
     }
+    if(!InventoryComponent)
+    {
+        return;
+    }
 
+    const TArray<FInventorySlot>& InfoSlots =
+        InventoryComponent->GetSlots();
+
+    if(!InfoSlots.IsValidIndex(SlotIndex))
+    {
+        return;
+    }
+
+    const FInventorySlot& InfoSlot = InfoSlots[SlotIndex];
+    if(InfoSlot.ItemID.IsNone()||InfoSlot.Count<1){
+        
+        return;
+    }
+    
+
+    if(ItemUseInfoWidgetClass)
+    {
+        ItemUseInfoWidget =
+            CreateWidget<UItemUseInfoWidget>(
+                this,
+                ItemUseInfoWidgetClass
+            );
+
+    }
+    ItemUseInfoWidget->OnUseClicked.AddDynamic(
+    this,
+    &UInventoryWidget::OnUseClicked
+    );
+    
+    ItemUseInfoWidget->OnDropClicked.AddDynamic(
+        this,
+        &UInventoryWidget::OnDropClicked
+    );
+
+    const FItemData* InfoData =
+        InventoryComponent->GetItemData(
+            InfoSlot.ItemID
+        );
+
+    if(InfoData && ItemUseInfoWidget)
+    {
+        
+        FVector2D MousePos;
+
+            GetOwningPlayer()->GetMousePosition(
+                MousePos.X,
+                MousePos.Y
+            );
+            ItemUseInfoWidget->SetPositionInViewport(
+            MousePos
+            );    
+            ItemUseInfoWidget->SetVisibility(
+                ESlateVisibility::Visible
+            );
+            ItemUseInfoWidget->AddToViewport();
+        
+      
+    }
     OnSlotRightClicked(SlotIndex);
+}
+
+void UInventoryWidget::OnUseClicked()
+{
+    if(!InventoryComponent)
+    {
+        return;
+    }
+
+    InventoryComponent->UseItemAt(
+       SelectedUseSlot
+    );
+
+    CloseItemUseInfo();
+}
+void UInventoryWidget::OnDropClicked()
+{
+    if(!InventoryComponent)
+    {
+        return;
+    }
+
+    InventoryComponent->RemoveItemAt(
+       SelectedDropSlot
+    );
+
+    CloseItemUseInfo();
 }
 
 void UInventoryWidget::SetInventoryComponent(UInventoryComponent* InComponent)
@@ -231,6 +331,9 @@ void UInventoryWidget::SetInventoryComponent(UInventoryComponent* InComponent)
         RefreshInventory(InventoryComponent->GetSlots());
     }
 }
+
+
+
 void UInventoryWidget::HandleInventoryChanged(
     int32 SlotIndex,
     FName ItemID)

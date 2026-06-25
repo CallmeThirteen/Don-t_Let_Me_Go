@@ -174,7 +174,26 @@ void UInventoryComponent::ExecuteItemEffect(const FItemData& ItemData, APawn* Us
     // 比如：调用 User 上的 HealthComponent 加血
     // 或者：生成一个 Actor 效果
 }
-
+bool UInventoryComponent::RemoveItemAt(int32 SlotIndex)
+{
+    if (!Slots.IsValidIndex(SlotIndex)) return false;
+    
+    FInventorySlot& Slot = Slots[SlotIndex];
+    if (Slot.ItemID.IsNone() || Slot.Count <= 0) return false;
+    
+    const FItemData* ItemData = GetItemData(Slot.ItemID);
+    if (!ItemData) return false;        
+    
+    Slot.Count--;
+    if (Slot.Count <= 0)
+    {
+        Slot.ItemID = NAME_None;
+        Slot.Count = 0;
+    }
+    
+    OnItemUsed.Broadcast(SlotIndex, ItemData->ItemID);
+    return true;
+}
 bool UInventoryComponent::RemoveItem(FName ItemID, int32 Count)
 {
     for (int32 i = 0; i < Slots.Num(); i++)
