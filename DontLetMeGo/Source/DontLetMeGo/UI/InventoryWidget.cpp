@@ -235,7 +235,7 @@ void UInventoryWidget::HandleSlotRightClicked(int32 SlotIndex)
         return;
     }
     
-
+    if(!ItemUseInfoWidgetClass)return;
     if(ItemUseInfoWidgetClass)
     {
         ItemUseInfoWidget =

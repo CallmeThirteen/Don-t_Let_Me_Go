@@ -297,6 +297,7 @@ void ADontLetMeGoCharacter::PickUp(){
 		APickupItem* Item=Cast<APickupItem>(HitActor);
 		if(Item){
 			InventoryComponent->AddItem(Item->ItemID,1);
+
 			if(GEngine){
 				FString PickupInfo=FString::Printf(
 					TEXT("Pick UP :%s"),
@@ -310,7 +311,7 @@ void ADontLetMeGoCharacter::PickUp(){
 				);
 			}
 			UE_LOG(LogTemp,Warning,TEXT("Pick Up : %s"),*Item->ItemID.ToString());
-			Item->Destroy();
+			Item->OnPickedUp();
 		}
 	}
 	/*//LineTrace
