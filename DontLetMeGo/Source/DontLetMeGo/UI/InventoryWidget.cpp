@@ -129,7 +129,6 @@ void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
     }
     CloseItemUseInfo();
     SelectedSlot = SlotIndex;
-    SelectedUseSlot = SlotIndex;
     for (int32 i = 0; i < SlotWidgets.Num(); i++)
     {
         if (SlotWidgets[i])
@@ -205,7 +204,7 @@ void UInventoryWidget::HandleSlotRightClicked(int32 SlotIndex)
     CloseItemInfo();
     CloseItemUseInfo();
     SelectedSlot = SlotIndex;
-     SelectedDropSlot = SlotIndex;
+    
      
     for (int32 i = 0; i < SlotWidgets.Num(); i++)
     {
@@ -290,7 +289,7 @@ void UInventoryWidget::OnUseClicked()
     }
 
     InventoryComponent->UseItemAt(
-       SelectedUseSlot
+       SelectedSlot
     );
 
     CloseItemUseInfo();
@@ -302,8 +301,8 @@ void UInventoryWidget::OnDropClicked()
         return;
     }
 
-    InventoryComponent->RemoveItemAt(
-       SelectedDropSlot
+    InventoryComponent->DropItemAt(
+       SelectedSlot
     );
 
     CloseItemUseInfo();

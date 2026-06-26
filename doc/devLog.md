@@ -611,348 +611,17 @@
 接下来马上实现使用物品的功能和制造物品的功能。
 
 今日实现：重构背包系统，优化背包ui，实现使用物品。
-```
-void UInventoryWidget::GetGridPosition(int32 SlotIndex, int32& OutRow, int32& OutColumn) const
-{
-    OutRow = SlotIndex / GridColumns;
-    OutColumn = SlotIndex % GridColumns;
-}
-
-void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
-{
-    SelectedSlot = SlotIndex;
-
-    for (int32 i = 0; i < SlotWidgets.Num(); i++)
-    {
-        if (SlotWidgets[i])
-        {
-            SlotWidgets[i]->SetSelected(
-                i == SelectedSlot
-            );
-        }
-    }
-
-    OnSlotClicked(SlotIndex);
-}
-
-void UInventoryWidget::SetInventoryComponent(UInventoryComponent* InComponent)
-{
-    if (InventoryComponent)
-    {
-        InventoryComponent->OnItemUsed.RemoveDynamic(
-            this,
-            &UInventoryWidget::HandleInventoryChanged
-        );
-    }
-
-    InventoryComponent = InComponent;
-
-    if (InventoryComponent)
-    {
-        InventoryComponent->OnItemUsed.AddDynamic(
-            this,
-            &UInventoryWidget::HandleInventoryChanged
-        );
-
-        RefreshInventory(InventoryComponent->GetSlots());
-    }
-}
-
-void UInventoryWidget::HandleInventoryChanged(
-    int32 SlotIndex,
-    FName ItemID)
-{
-    if (InventoryComponent)
-    {
-        RefreshInventory(
-            InventoryComponent->GetSlots()
-        );
-    }
-}
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSlotClicked, int32, SlotIndex);
-
-FReply UItemEntryWidget::NativeOnMouseButtonDown(
-    const FGeometry& InGeometry,
-    const FPointerEvent& InMouseEvent)
-{
-    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
-    {
-        OnSlotClicked.Broadcast(SlotIndex);
-        return FReply::Handled();
-    }
-
-    if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
-    {
-        OnSlotRightClicked.Broadcast(SlotIndex);
-        return FReply::Handled();
-    }
-
-    return Super::NativeOnMouseButtonDown(
-        InGeometry,
-        InMouseEvent);
-}
-
-```
-
-
-## 2026-6-24
-犯了一个非常非常非常严重的问题，因为uasset占存储大，上传github太慢，于是我把所有uasset都删了，结果连本地的也删了。。。
-重新创建所有的.uasset，包括所有资产蓝图，UIwidget。
-
-今天实现了与背包的交互，左键点击背包格子显示高亮以及显示背包格子中的物品信息。
-```
-
-UCLASS()
-class DONTLETMEGO_API UItemInfoWidget : public UUserWidget
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* ItemNameText;
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* HungerValue;
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* ThirstValue;
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* SpiritValue;
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* StaminaValue;
-
-public:
-	UFUNCTION(BlueprintCallable)
-	void SetItemInfo(
-    const FItemData& Data
-	);
-};
-
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "ItemInfoWidget.h"
-#include "Components/TextBlock.h"
-
-void UItemInfoWidget::SetItemInfo(
-    const FItemData& Data)
-{
-    ItemNameText->SetText(
-        Data.DisplayName
-    );
-    if (Data.RecoverHunger >=0)
-    {
-        FString HungerStr = FString::Printf(TEXT("+%.0f"), Data.RecoverHunger);
-        HungerValue->SetText(FText::FromString(HungerStr));
-    }else if(Data.RecoverHunger < 0){
-        FString HungerStr = FString::Printf(TEXT("-%.0f"), Data.RecoverHunger);
-        HungerValue->SetText(FText::FromString(HungerStr));
-    }
-
-    if (Data.RecoverSpirit >=0)
-    {
-        FString SpiritStr = FString::Printf(TEXT("+%.0f"), Data.RecoverSpirit);
-        SpiritValue->SetText(FText::FromString(SpiritStr));
-    }else if(Data.RecoverSpirit < 0){
-        FString SpiritStr = FString::Printf(TEXT("-%.0f"), Data.RecoverSpirit);
-        SpiritValue->SetText(FText::FromString(SpiritStr));
-    }
-
-    if (Data.RecoverStamina >=0)
-    {
-        FString StaminaStr = FString::Printf(TEXT("+%.0f"), Data.RecoverStamina);
-        StaminaValue->SetText(FText::FromString(StaminaStr));
-    }else if(Data.RecoverStamina < 0){
-        FString StaminaStr = FString::Printf(TEXT("-%.0f"), Data.RecoverStamina);
-        StaminaValue->SetText(FText::FromString(StaminaStr));
-    }
-
-    if (Data.RecoverThirst>=0)
-    {
-        FString ThirstValueStr = FString::Printf(TEXT("+%.0f"), Data.RecoverThirst);
-        ThirstValue->SetText(FText::FromString(ThirstValueStr));
-    }else if(Data.RecoverThirst< 0){
-        FString ThirstValueStr = FString::Printf(TEXT("-%.0f"), Data.RecoverThirst);
-        ThirstValue->SetText(FText::FromString(ThirstValueStr));
-    }
-
-    
-}
-
-if (ItemInfoWidget)
-    {
-    ItemInfoWidget->RemoveFromParent();
-    ItemInfoWidget = nullptr;
-
-    }
-    SelectedSlot = SlotIndex;
-
-    for (int32 i = 0; i < SlotWidgets.Num(); i++)
-    {
-        if (SlotWidgets[i])
-        {
-            SlotWidgets[i]->SetSelected(
-                i == SelectedSlot
-            );
-        }
-    }
-    
-    OnSlotClicked(SlotIndex);
-    
-    if(!InventoryComponent)
-    {
-        return;
-    }
-
-    const TArray<FInventorySlot>& InfoSlots =
-        InventoryComponent->GetSlots();
-
-    if(!InfoSlots.IsValidIndex(SlotIndex))
-    {
-        return;
-    }
-
-    const FInventorySlot& InfoSlot = InfoSlots[SlotIndex];
-    if(InfoSlot.ItemID.IsNone()||InfoSlot.Count<1){
-        
-        return;
-    }
-    
-
-    if(ItemInfoWidgetClass)
-    {
-        ItemInfoWidget =
-            CreateWidget<UItemInfoWidget>(
-                this,
-                ItemInfoWidgetClass
-            );
-
-    }
-    const FItemData* InfoData =
-        InventoryComponent->GetItemData(
-            InfoSlot.ItemID
-        );
-
-    if(InfoData && ItemInfoWidget)
-    {
-        ItemInfoWidget->SetItemInfo(
-            *InfoData
-        );
-        FVector2D MousePos;
-
-            GetOwningPlayer()->GetMousePosition(
-                MousePos.X,
-                MousePos.Y
-            );
-            ItemInfoWidget->SetPositionInViewport(
-            MousePos
-            );    
-            ItemInfoWidget->SetVisibility(
-                ESlateVisibility::HitTestInvisible
-            );
-            ItemInfoWidget->AddToViewport();
-        
-      
-    }
-    
-    void UInventoryWidget::CloseItemInfo(){
-    if(ItemInfoWidget)
-    {
-        ItemInfoWidget->RemoveFromParent();
-        ItemInfoWidget = nullptr;
-    }
-}
-
-//character.cpp:
-    UInventoryWidget* InvWidget = Cast<UInventoryWidget>(InventoryWidget);
-		if(InvWidget){
-			InvWidget->CloseItemInfo();
-		}
-```
-
-## 2026-6-25
-今天解决了很多问题。
-首先是livingcode同步问题，cscode一定是要用developmentEditor build，之前用的不是Editor，导致每次打开都不同步。
-
-实现了右键弹出使用和丢弃的按钮窗口，点击使用能够使用可使用物品，点击丢弃会丢弃物品。
-
->1. 新建useWidgetClass文件
-> 在ItemUseInfoWidget.h中：
 >```
->UCLASS()
->class DONTLETMEGO_API UItemUseInfoWidget : public >UUserWidget
+>void UInventoryWidget::GetGridPosition(int32 SlotIndex, int32& OutRow, int32& OutColumn) const
 >{
->	GENERATED_BODY()
->	
->	UPROPERTY(meta=(BindWidget))
->	class UButton* UseButton;
->
->	UPROPERTY(meta = (BindWidget))
->	class UButton* DropButton;
->
-> 	
->public:
->
->	void NativeConstruct() override;
->
->	UFUNCTION()
->	void HandleUseClicked();
->
->	UFUNCTION()
->	void HandleDropClicked();
->
->	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUseClicked);
->	DECLARE_DYNAMIC_MULTICAST_DELEGATE>(FOnDropClicked);
->	
->	UPROPERTY(BlueprintAssignable)
->	FOnUseClicked OnUseClicked;
->	
->	UPROPERTY(BlueprintAssignable)
->	FOnDropClicked OnDropClicked;
->};
->
-> 
->```
->.cpp中
->```
->    
->void UItemUseInfoWidget::NativeConstruct(){
->    Super::NativeConstruct();
->
->    if(UseButton){
->        UseButton->OnClicked.AddDynamic(
->            this,
->            &UItemUseInfoWidget::HandleUseClicked
->        );
->    }
->    if(DropButton){
->        DropButton->OnClicked.AddDynamic(
->            this,
->            &UItemUseInfoWidget::HandleDropClicked
->        );
->    }
+>    OutRow = SlotIndex / GridColumns;
+>    OutColumn = SlotIndex % GridColumns;
 >}
 >
->void UItemUseInfoWidget::HandleUseClicked()
+>void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
 >{
->    OnUseClicked.Broadcast();
->}
->
->void UItemUseInfoWidget::HandleDropClicked()
->{
->    OnDropClicked.Broadcast();
->}
->
->```
->2. 在InvnetoryWidgt.cpp中实现按钮弹窗和点击实现功能
->
->```
->
->void UInventoryWidget::HandleSlotRightClicked(int32 >SlotIndex)
->{
->    CloseItemInfo();
->    CloseItemUseInfo();
 >    SelectedSlot = SlotIndex;
->     SelectedDropSlot = SlotIndex;
->     
+>
 >    for (int32 i = 0; i < SlotWidgets.Num(); i++)
 >    {
 >        if (SlotWidgets[i])
@@ -962,6 +631,172 @@ if (ItemInfoWidget)
 >            );
 >        }
 >    }
+>
+>    OnSlotClicked(SlotIndex);
+>}
+>
+>void UInventoryWidget::SetInventoryComponent>(UInventoryComponent* InComponent)
+>{
+>    if (InventoryComponent)
+>    {
+>        InventoryComponent->OnItemUsed.RemoveDynamic(
+>            this,
+>            &UInventoryWidget::HandleInventoryChanged
+>        );
+>    }
+>
+>    InventoryComponent = InComponent;
+>
+>    if (InventoryComponent)
+>    {
+>        InventoryComponent->OnItemUsed.AddDynamic(
+>            this,
+>            &UInventoryWidget::HandleInventoryChanged
+>        );
+>
+>        RefreshInventory(InventoryComponent->GetSlots());
+>    }
+>}
+>
+>void UInventoryWidget::HandleInventoryChanged(
+>    int32 SlotIndex,
+>    FName ItemID)
+>{
+>    if (InventoryComponent)
+>    {
+>        RefreshInventory(
+>            InventoryComponent->GetSlots()
+>        );
+>    }
+>}
+>
+>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSlotClicked, >int32, SlotIndex);
+>
+>FReply UItemEntryWidget::NativeOnMouseButtonDown(
+>    const FGeometry& InGeometry,
+>    const FPointerEvent& InMouseEvent)
+>{
+>    if (InMouseEvent.GetEffectingButton() == >EKeys::LeftMouseButton)
+>    {
+>        OnSlotClicked.Broadcast(SlotIndex);
+>        return FReply::Handled();
+>    }
+>
+>    if (InMouseEvent.GetEffectingButton() == >EKeys::RightMouseButton)
+>    {
+>        OnSlotRightClicked.Broadcast(SlotIndex);
+>        return FReply::Handled();
+>    }
+>
+>    return Super::NativeOnMouseButtonDown(
+>        InGeometry,
+>        InMouseEvent);
+>}
+>
+>```
+>
+>
+>## 2026-6-24
+>犯了一个非常非常非常严重的问题，因为uasset占存储大，上传github太>慢，于是我把所有uasset都删了，结果连本地的也删了。。。
+>重新创建所有的.uasset，包括所有资产蓝图，UIwidget。
+>
+>今天实现了与背包的交互，左键点击背包格子显示高亮以及显示背包格子中的>物品信息。
+>```
+>
+>UCLASS()
+>class DONTLETMEGO_API UItemInfoWidget : public UUserWidget
+>{
+>	GENERATED_BODY()
+>	
+>	UPROPERTY(meta = (BindWidget))
+>	class UTextBlock* ItemNameText;
+>	UPROPERTY(meta = (BindWidget))
+>	class UTextBlock* HungerValue;
+>	UPROPERTY(meta = (BindWidget))
+>	class UTextBlock* ThirstValue;
+>	UPROPERTY(meta = (BindWidget))
+>	class UTextBlock* SpiritValue;
+>	UPROPERTY(meta = (BindWidget))
+>	class UTextBlock* StaminaValue;
+>
+>public:
+>	UFUNCTION(BlueprintCallable)
+>	void SetItemInfo(
+>    const FItemData& Data
+>	);
+>};
+>
+>// Fill out your copyright notice in the Description page of >Project Settings.
+>
+>
+>#include "ItemInfoWidget.h"
+>#include "Components/TextBlock.h"
+>
+>void UItemInfoWidget::SetItemInfo(
+>    const FItemData& Data)
+>{
+>    ItemNameText->SetText(
+>        Data.DisplayName
+>    );
+>    if (Data.RecoverHunger >=0)
+>    {
+>        FString HungerStr = FString::Printf(TEXT("+%.0f"), Data.>RecoverHunger);
+>        HungerValue->SetText(FText::FromString(HungerStr));
+>    }else if(Data.RecoverHunger < 0){
+>        FString HungerStr = FString::Printf(TEXT("-%.0f"), Data.>RecoverHunger);
+>        HungerValue->SetText(FText::FromString(HungerStr));
+>    }
+>
+>    if (Data.RecoverSpirit >=0)
+>    {
+>        FString SpiritStr = FString::Printf(TEXT("+%.0f"), Data.>RecoverSpirit);
+>        SpiritValue->SetText(FText::FromString(SpiritStr));
+>    }else if(Data.RecoverSpirit < 0){
+>        FString SpiritStr = FString::Printf(TEXT("-%.0f"), Data.>RecoverSpirit);
+>        SpiritValue->SetText(FText::FromString(SpiritStr));
+>    }
+>
+>    if (Data.RecoverStamina >=0)
+>    {
+>        FString StaminaStr = FString::Printf(TEXT("+%.0f"), >Data.RecoverStamina);
+>        StaminaValue->SetText(FText::FromString(StaminaStr));
+>    }else if(Data.RecoverStamina < 0){
+>        FString StaminaStr = FString::Printf(TEXT("-%.0f"), >Data.RecoverStamina);
+>        StaminaValue->SetText(FText::FromString(StaminaStr));
+>    }
+>
+>    if (Data.RecoverThirst>=0)
+>    {
+>        FString ThirstValueStr = FString::Printf(TEXT("+%.0f"), >Data.RecoverThirst);
+>        ThirstValue->SetText(FText::FromString(ThirstValueStr));
+>    }else if(Data.RecoverThirst< 0){
+>        FString ThirstValueStr = FString::Printf(TEXT("-%.0f"), >Data.RecoverThirst);
+>        ThirstValue->SetText(FText::FromString(ThirstValueStr));
+>    }
+>
+>    
+>}
+>
+>if (ItemInfoWidget)
+>    {
+>    ItemInfoWidget->RemoveFromParent();
+>    ItemInfoWidget = nullptr;
+>
+>    }
+>    SelectedSlot = SlotIndex;
+>
+>    for (int32 i = 0; i < SlotWidgets.Num(); i++)
+>    {
+>        if (SlotWidgets[i])
+>        {
+>            SlotWidgets[i]->SetSelected(
+>                i == SelectedSlot
+>            );
+>        }
+>    }
+>    
+>    OnSlotClicked(SlotIndex);
+>    
 >    if(!InventoryComponent)
 >    {
 >        return;
@@ -975,89 +810,557 @@ if (ItemInfoWidget)
 >        return;
 >    }
 >
->    const FInventorySlot& InfoSlot = InfoSlots>[SlotIndex];
+>    const FInventorySlot& InfoSlot = InfoSlots[SlotIndex];
 >    if(InfoSlot.ItemID.IsNone()||InfoSlot.Count<1){
 >        
 >        return;
 >    }
 >    
 >
->    if(ItemUseInfoWidgetClass)
+>    if(ItemInfoWidgetClass)
 >    {
->        ItemUseInfoWidget =
->            CreateWidget<UItemUseInfoWidget>(
+>        ItemInfoWidget =
+>            CreateWidget<UItemInfoWidget>(
 >                this,
->                ItemUseInfoWidgetClass
+>                ItemInfoWidgetClass
 >            );
 >
 >    }
->    ItemUseInfoWidget->OnUseClicked.AddDynamic(
->    this,
->    &UInventoryWidget::OnUseClicked
->    );
->    
->    ItemUseInfoWidget->OnDropClicked.AddDynamic(
->        this,
->        &UInventoryWidget::OnDropClicked
->    );
->
 >    const FItemData* InfoData =
 >        InventoryComponent->GetItemData(
 >            InfoSlot.ItemID
 >        );
 >
->    if(InfoData && ItemUseInfoWidget)
+>    if(InfoData && ItemInfoWidget)
 >    {
->        
+>        ItemInfoWidget->SetItemInfo(
+>            *InfoData
+>        );
 >        FVector2D MousePos;
 >
 >            GetOwningPlayer()->GetMousePosition(
 >                MousePos.X,
 >                MousePos.Y
 >            );
->            ItemUseInfoWidget->SetPositionInViewport(
+>            ItemInfoWidget->SetPositionInViewport(
 >            MousePos
 >            );    
->            ItemUseInfoWidget->SetVisibility(
->                ESlateVisibility::Visible
+>            ItemInfoWidget->SetVisibility(
+>                ESlateVisibility::HitTestInvisible
 >            );
->            ItemUseInfoWidget->AddToViewport();
+>            ItemInfoWidget->AddToViewport();
 >        
 >      
 >    }
->    OnSlotRightClicked(SlotIndex);
+>    
+>    void UInventoryWidget::CloseItemInfo(){
+>    if(ItemInfoWidget)
+>    {
+>        ItemInfoWidget->RemoveFromParent();
+>        ItemInfoWidget = nullptr;
+>    }
 >}
 >
->void UInventoryWidget::OnUseClicked()
+>//character.cpp:
+>    UInventoryWidget* InvWidget = Cast<UInventoryWidget>>(InventoryWidget);
+>		if(InvWidget){
+>			InvWidget->CloseItemInfo();
+>		}
+>```
+>
+>## 2026-6-25
+>今天解决了很多问题。
+>首先是livingcode同步问题，cscode一定是要用developmentEditor >build，之前用的不是Editor，导致每次打开都不同步。
+>
+>实现了右键弹出使用和丢弃的按钮窗口，点击使用能够使用可使用物品，点击>丢弃会丢弃物品。
+>
+>>1. 新建useWidgetClass文件
+>> 在ItemUseInfoWidget.h中：
+>>```
+>>UCLASS()
+>>class DONTLETMEGO_API UItemUseInfoWidget : public >UUserWidget
+>>{
+>>	GENERATED_BODY()
+>>	
+>>	UPROPERTY(meta=(BindWidget))
+>>	class UButton* UseButton;
+>>
+>>	UPROPERTY(meta = (BindWidget))
+>>	class UButton* DropButton;
+>>
+>> 	
+>>public:
+>>
+>>	void NativeConstruct() override;
+>>
+>>	UFUNCTION()
+>>	void HandleUseClicked();
+>>
+>>	UFUNCTION()
+>>	void HandleDropClicked();
+>>
+>>	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUseClicked);
+>>	DECLARE_DYNAMIC_MULTICAST_DELEGATE>(FOnDropClicked);
+>>	
+>>	UPROPERTY(BlueprintAssignable)
+>>	FOnUseClicked OnUseClicked;
+>>	
+>>	UPROPERTY(BlueprintAssignable)
+>>	FOnDropClicked OnDropClicked;
+>>};
+>>
+>> 
+>>```
+>>.cpp中
+>>```
+>>    
+>>void UItemUseInfoWidget::NativeConstruct(){
+>>    Super::NativeConstruct();
+>>
+>>    if(UseButton){
+>>        UseButton->OnClicked.AddDynamic(
+>>            this,
+>>            &UItemUseInfoWidget::HandleUseClicked
+>>        );
+>>    }
+>>    if(DropButton){
+>>        DropButton->OnClicked.AddDynamic(
+>>            this,
+>>            &UItemUseInfoWidget::HandleDropClicked
+>>        );
+>>    }
+>>}
+>>
+>>void UItemUseInfoWidget::HandleUseClicked()
+>>{
+>>    OnUseClicked.Broadcast();
+>>}
+>>
+>>void UItemUseInfoWidget::HandleDropClicked()
+>>{
+>>    OnDropClicked.Broadcast();
+>>}
+>>
+>>```
+>>2. 在InvnetoryWidgt.cpp中实现按钮弹窗和点击实现功能
+>>
+>>```
+>>
+>>void UInventoryWidget::HandleSlotRightClicked(int32 >SlotIndex)
+>>{
+>>    CloseItemInfo();
+>>    CloseItemUseInfo();
+>>    SelectedSlot = SlotIndex;
+>>     SelectedDropSlot = SlotIndex;
+>>     
+>>    for (int32 i = 0; i < SlotWidgets.Num(); i++)
+>>    {
+>>        if (SlotWidgets[i])
+>>        {
+>>            SlotWidgets[i]->SetSelected(
+>>                i == SelectedSlot
+>>            );
+>>        }
+>>    }
+>>    if(!InventoryComponent)
+>>    {
+>>        return;
+>>    }
+>>
+>>    const TArray<FInventorySlot>& InfoSlots =
+>>        InventoryComponent->GetSlots();
+>>
+>>    if(!InfoSlots.IsValidIndex(SlotIndex))
+>>    {
+>>        return;
+>>    }
+>>
+>>    const FInventorySlot& InfoSlot = InfoSlots>[SlotIndex];
+>>    if(InfoSlot.ItemID.IsNone()||InfoSlot.Count<1){
+>>        
+>>        return;
+>>    }
+>>    
+>>
+>>    if(ItemUseInfoWidgetClass)
+>>    {
+>>        ItemUseInfoWidget =
+>>            CreateWidget<UItemUseInfoWidget>(
+>>                this,
+>>                ItemUseInfoWidgetClass
+>>            );
+>>
+>>    }
+>>    ItemUseInfoWidget->OnUseClicked.AddDynamic(
+>>    this,
+>>    &UInventoryWidget::OnUseClicked
+>>    );
+>>    
+>>    ItemUseInfoWidget->OnDropClicked.AddDynamic(
+>>        this,
+>>        &UInventoryWidget::OnDropClicked
+>>    );
+>>
+>>    const FItemData* InfoData =
+>>        InventoryComponent->GetItemData(
+>>            InfoSlot.ItemID
+>>        );
+>>
+>>    if(InfoData && ItemUseInfoWidget)
+>>    {
+>>        
+>>        FVector2D MousePos;
+>>
+>>            GetOwningPlayer()->GetMousePosition(
+>>                MousePos.X,
+>>                MousePos.Y
+>>            );
+>>            ItemUseInfoWidget->SetPositionInViewport(
+>>            MousePos
+>>            );    
+>>            ItemUseInfoWidget->SetVisibility(
+>>                ESlateVisibility::Visible
+>>            );
+>>            ItemUseInfoWidget->AddToViewport();
+>>        
+>>      
+>>    }
+>>    OnSlotRightClicked(SlotIndex);
+>>}
+>>
+>>void UInventoryWidget::OnUseClicked()
+>>{
+>>    if(!InventoryComponent)
+>>    {
+>>        return;
+>>    }
+>>
+>>    InventoryComponent->UseItemAt(
+>>       SelectedUseSlot
+>>    );
+>>
+>>    CloseItemUseInfo();
+>>}
+>>void UInventoryWidget::OnDropClicked()
+>>{
+>>    if(!InventoryComponent)
+>>    {
+>>        return;
+>>    }
+>>
+>>    InventoryComponent->RemoveItemAt(
+>>       SelectedDropSlot
+>>    );
+>>
+>>    CloseItemUseInfo();
+>>}
+>>```
+>
+>但是还只是相当简陋的模式，比如丢弃还没实现在地图中返还相应物品。但是>作为原型功能应该够了。
+>
+>明天开始要实现物品制作的功能。
+>
+>
+>## 2026-6-26
+>
+>结果还是没有开始物品制作环境，因为想着把现有功能先完善了。
+>
+>今天实现：
+>1. 背包格子始终按顺序填充，用完变空了后续也能填上。
+>``` 
+>
+>//InventoryComponent.cpp中：
+>bool UInventoryComponent::AddItem(FName ItemID, int32 Count)
 >{
->    if(!InventoryComponent)
+>    if (Count <= 0)
 >    {
+>        return false;
+>    }
+>
+>    const FItemData* Data = GetItemData(ItemID);
+>    if (!Data)
+>    {
+>        return false;
+>    }
+>
+>    int32 MaxStack = Data->MaxStack;
+>
+>    // 1. 先堆叠到已有同 ID 的格子
+>    for (FInventorySlot& Slot : Slots)
+>    {
+>        if (Slot.ItemID != ItemID)
+>        {
+>            continue;
+>        }
+>
+>        if (Slot.Count >= MaxStack)
+>        {
+>            continue;
+>        }
+>
+>        int32 SpaceLeft = MaxStack - Slot.Count;
+>
+>        if (Count <= SpaceLeft)
+>        {
+>            Slot.Count += Count;
+>            OnItemUsed.Broadcast(-1, ItemID);
+>            return true;
+>        }
+>
+>        Slot.Count = MaxStack;
+>        Count -= SpaceLeft;
+>    }
+>
+>    // 2. 再填充空槽位（ItemID == NAME_None 或 Count <= 0）
+>    for (FInventorySlot& Slot : Slots)
+>    {
+>        if (!Slot.ItemID.IsNone() && Slot.Count > 0)
+>        {
+>            continue;
+>        }
+>
+>        int32 AddCount = FMath::Min(Count, MaxStack);
+>        Slot.ItemID = ItemID;
+>        Slot.Count = AddCount;
+>        Count -= AddCount;
+>
+>        if (Count <= 0)
+>        {
+>            OnItemUsed.Broadcast(-1, ItemID);
+>            return true;
+>        }
+>    }
+>
+>    // 3. 还有剩余，新增格子
+>    while (Count > 0)
+>    {
+>        FInventorySlot NewSlot;
+>        NewSlot.ItemID = ItemID;
+>        NewSlot.Count = FMath::Min(Count, MaxStack);
+>        Count -= NewSlot.Count;
+>        Slots.Add(NewSlot);
+>    }
+>
+>    OnItemUsed.Broadcast(-1, ItemID);
+>    return true;
+>}
+>```
+>2. 格子的选择统一。
+>```//InventoryWidget.h：
+>
+>	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+>	int32 SelectedSlot = -1;
+>```
+>3. 靠近资源物品显示交互信息。
+>```//PickupItem.h:
+>    UPROPERTY(VisibleAnywhere)
+>    class USphereComponent* InteractionSphere;
+>
+>    UPROPERTY(VisibleAnywhere, Category = "UI")
+>    class UWidgetComponent* InteractPromptWidget;
+>    UFUNCTION()
+>    void OnBeginOverlap(
+>        UPrimitiveComponent* OverlappedComp,
+>        AActor* OtherActor,
+>        UPrimitiveComponent* OtherComp,
+>        int32 OtherBodyIndex,
+>        bool bFromSweep,
+>        const FHitResult& SweepResult
+>    );
+>
+>    UFUNCTION()
+>    void OnEndOverlap(
+>        UPrimitiveComponent* OverlappedComp,
+>        AActor* OtherActor,
+>        UPrimitiveComponent* OtherComp,
+>        int32 OtherBodyIndex
+>    );
+>
+>    //PickupItem.cpp:
+>     PickupItemMesh = >CreateDefaultSubobject<UStaticMeshComponent>(TEXT>("PickupItemMesh"));
+>    RootComponent = PickupItemMesh;
+>
+>    InteractionSphere = CreateDefaultSubobject<USphereComponent>>(TEXT("InteractionSphere"));
+>    InteractionSphere->SetupAttachment(PickupItemMesh);
+>    InteractionSphere->SetSphereRadius(75.f);
+>
+>    InteractPromptWidget = >CreateDefaultSubobject<UWidgetComponent>(TEXT>("InteractPrompt"));
+>    InteractPromptWidget->SetupAttachment(PickupItemMesh);
+>    InteractPromptWidget->SetWidgetSpace(EWidgetSpace::Screen);
+>    InteractPromptWidget->SetVisibility(false);
+>
+>    InteractionSphere->OnComponentBeginOverlap.AddDynamic>(this, &APickupItem::OnBeginOverlap);
+>    InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &>APickupItem::OnEndOverlap);
+>
+>
+>    void APickupItem::OnBeginOverlap(
+>    UPrimitiveComponent* OverlappedComp,
+>    AActor* OtherActor,
+>    UPrimitiveComponent* OtherComp,
+>    int32 OtherBodyIndex,
+>    bool bFromSweep,
+>    const FHitResult& SweepResult
+>)
+>{
+>    if (bIsActive && InteractPromptWidget)
+>    {
+>        InteractPromptWidget->SetVisibility(true);
+>    }
+>
+>    if (GEngine)
+>    {
+>        GEngine->AddOnScreenDebugMessage(-1, 2.0f, >FColor::Yellow, TEXT("Item!"));
+>    }
+>}
+>
+>void APickupItem::OnEndOverlap(
+>    UPrimitiveComponent* OverlappedComp,
+>    AActor* OtherActor,
+>    UPrimitiveComponent* OtherComp,
+>    int32 OtherBodyIndex
+>)
+>{
+>    if (InteractPromptWidget)
+>    {
+>        InteractPromptWidget->SetVisibility(false);
+>    }
+>}
+>```
+>4. 资源物品可刷新。
+>```//PickupItem.h
+>   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = >"Item")
+>    bool bRespawnable = true;
+>
+>    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = >"Item")
+>    float RespawnTime = 5.0f;
+>
+>    UPROPERTY(BlueprintReadOnly, Category = "Item")
+>    bool bIsActive = true;
+>    private:
+>    FTimerHandle RespawnTimerHandle;
+>    //PickupItem.cpp:
+>    
+>void APickupItem::SetActive(bool bActive)
+>{
+>    bIsActive = bActive;
+>    SetActorHiddenInGame(!bActive);
+>    SetActorEnableCollision(bActive);
+>
+>    if (InteractPromptWidget)
+>    {
+>        InteractPromptWidget->SetVisibility(false);
+>    }
+>}
+>
+>void APickupItem::OnPickedUp()
+>{
+>    if (!bIsActive) return;
+>
+>    if (!bRespawnable)
+>    {
+>        Destroy();
 >        return;
 >    }
 >
->    InventoryComponent->UseItemAt(
->       SelectedUseSlot
->    );
+>    SetActive(false);
 >
->    CloseItemUseInfo();
->}
->void UInventoryWidget::OnDropClicked()
->{
->    if(!InventoryComponent)
+>    if (bRespawnable && RespawnTime > 0.0f)
 >    {
->        return;
+>        GetWorld()->GetTimerManager().SetTimer(
+>            RespawnTimerHandle,
+>            this,
+>            &APickupItem::Respawn,
+>            RespawnTime,
+>            false
+>        );
+>    }
+>}
+>
+>void APickupItem::Respawn()
+>{
+>    SetActive(true);
+>}
+>
+>//Character.cpp:
+>Item->OnPickedUp();
+>```
+>5. 丢弃物品会原地返还相应物品。
+>```
+>//InventoryType.h:
+>    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+>    TSubclassOf<AActor> PickupActorClass = nullptr;
+>//InventoryComponent.h:
+>    
+>    UPROPERTY(EditDefaultsOnly, Category="Inventory")
+>    float DropDistance = 100.0f;                
+>
+>    UPROPERTY(EditDefaultsOnly, Category="Inventory")
+>    float DropHeight = 50.0f;                   
+>
+>    UFUNCTION(BlueprintCallable)
+>    bool DropItemAt(int32 SlotIndex);            
+>
+>//InventoryComponent.cpp:
+>    
+>bool UInventoryComponent::DropItemAt(int32 SlotIndex)
+>{
+>    if (!Slots.IsValidIndex(SlotIndex))
+>    {
+>        return false;
 >    }
 >
->    InventoryComponent->RemoveItemAt(
->       SelectedDropSlot
->    );
+>    FInventorySlot& DropSlot = Slots[SlotIndex];
+>    if (DropSlot.ItemID.IsNone() || DropSlot.Count <= 0)
+>    {
+>        return false;
+>    }
 >
->    CloseItemUseInfo();
+>    FName DroppedItemID = DropSlot.ItemID;
+>    AActor* Owner = GetOwner();
+>    UWorld* World = GetWorld();
+>
+>    if (Owner && World)
+>    {
+>        const FItemData* DropData = GetItemData(DroppedItemID);
+>        if (!DropData || !DropData->PickupActorClass)
+>        {
+>            UE_LOG(LogTemp, Warning, TEXT("DropItemAt: %s 没有配>置 PickupActorClass"), *DroppedItemID.ToString());
+>            return false;
+>        }
+>
+>        FVector SpawnLocation = Owner->GetActorLocation()
+>            + Owner->GetActorForwardVector() * DropDistance
+>            + FVector(0.0f, 0.0f, DropHeight);
+>
+>        FRotator SpawnRotation = Owner->GetActorRotation();
+>
+>        FActorSpawnParameters SpawnParams;
+>        SpawnParams.Owner = Owner;
+>        SpawnParams.Instigator = Cast<APawn>(Owner);
+>        SpawnParams.SpawnCollisionHandlingOverride = >ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButA>lwaysSpawn;
+>
+>        AActor* SpawnedActor = World->SpawnActor<AActor>>(DropData->PickupActorClass, SpawnLocation, >SpawnRotation, SpawnParams);
+>        if (APickupItem* DroppedItem = Cast<APickupItem>>(SpawnedActor))
+>        {
+>            DroppedItem->ItemID = DroppedItemID;
+>            DroppedItem->bRespawnable = false;
+>            DroppedItem->RespawnTime = 0.0f;
+>            DroppedItem->SetActive(true);
+>        }
+>    }
+>
+>    DropSlot.Count--;
+>    if (DropSlot.Count <= 0)
+>    {
+>        DropSlot.ItemID = NAME_None;
+>        DropSlot.Count = 0;
+>    }
+>
+>    OnItemUsed.Broadcast(SlotIndex, DroppedItemID);
+>    return true;
 >}
 >```
 
-但是还只是相当简陋的模式，比如丢弃还没实现在地图中返还相应物品。但是作为原型功能应该够了。
+也算完成蛮多的，但是大部分时间浪费在了重构上（今天蓝图资产坏了，重构搞了半天，最后还是回溯才完成，以后要即使github，太重要了，还好有github记录版本可以回溯。）
 
-明天开始要实现物品制作的功能。
-
-
+明天开始实现recips。

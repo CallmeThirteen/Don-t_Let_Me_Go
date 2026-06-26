@@ -19,7 +19,7 @@ struct FItemData : public FTableRowBase
     UTexture2D* Icon;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    TSubclassOf<AActor> ItemClass;
+    TSubclassOf<AActor> PickupActorClass = nullptr;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     int32 MaxStack = 99;

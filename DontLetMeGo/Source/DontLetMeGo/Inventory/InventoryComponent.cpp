@@ -1,4 +1,5 @@
 #include "InventoryComponent.h"
+#include "../Items/PickupItem.h"
 #include "../Status/StatusComponent.h"
 
 UInventoryComponent::UInventoryComponent()
@@ -18,30 +19,66 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 bool UInventoryComponent::AddItem(FName ItemID, int32 Count)
 {
-    if (Count <= 0) return false;
-    
+    if (Count <= 0)
+    {
+        return false;
+    }
+
     const FItemData* Data = GetItemData(ItemID);
-    if (!Data) return false;
-    
+    if (!Data)
+    {
+        return false;
+    }
+
     int32 MaxStack = Data->MaxStack;
-    
+
+    // 1. 先堆叠到已有同 ID 的格子
     for (FInventorySlot& Slot : Slots)
     {
-        if (Slot.ItemID != ItemID) continue;
-        if (Slot.Count >= MaxStack) continue;
-        
+        if (Slot.ItemID != ItemID)
+        {
+            continue;
+        }
+
+        if (Slot.Count >= MaxStack)
+        {
+            continue;
+        }
+
         int32 SpaceLeft = MaxStack - Slot.Count;
+
         if (Count <= SpaceLeft)
         {
             Slot.Count += Count;
-            OnItemUsed.Broadcast(-1, ItemID); 
+            OnItemUsed.Broadcast(-1, ItemID);
             return true;
         }
+
         Slot.Count = MaxStack;
         Count -= SpaceLeft;
     }
-    
-  
+
+    // 2. 再填充空槽位（ItemID == NAME_None 或 Count <= 0）
+    for (FInventorySlot& Slot : Slots)
+    {
+        if (!Slot.ItemID.IsNone() && Slot.Count > 0)
+        {
+            continue;
+        }
+
+        int32 AddCount = FMath::Min(Count, MaxStack);
+        Slot.ItemID = ItemID;
+        Slot.Count = AddCount;
+        Count -= AddCount;
+
+        if (Count <= 0)
+        {
+            OnItemUsed.Broadcast(-1, ItemID);
+            return true;
+        }
+    }
+
+    // 3. 还有剩余，新增格子
     while (Count > 0)
     {
         FInventorySlot NewSlot;
@@ -50,7 +87,7 @@ bool UInventoryComponent::AddItem(FName ItemID, int32 Count)
         Count -= NewSlot.Count;
         Slots.Add(NewSlot);
     }
-    
+
     OnItemUsed.Broadcast(-1, ItemID);
     return true;
 }
@@ -210,6 +247,64 @@ bool UInventoryComponent::RemoveItem(FName ItemID, int32 Count)
         }
     }
     return false;
+}
+
+bool UInventoryComponent::DropItemAt(int32 SlotIndex)
+{
+    if (!Slots.IsValidIndex(SlotIndex))
+    {
+        return false;
+    }
+
+    FInventorySlot& DropSlot = Slots[SlotIndex];
+    if (DropSlot.ItemID.IsNone() || DropSlot.Count <= 0)
+    {
+        return false;
+    }
+
+    FName DroppedItemID = DropSlot.ItemID;
+    AActor* Owner = GetOwner();
+    UWorld* World = GetWorld();
+
+    if (Owner && World)
+    {
+        const FItemData* DropData = GetItemData(DroppedItemID);
+        if (!DropData || !DropData->PickupActorClass)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("DropItemAt: %s 没有配置 PickupActorClass"), *DroppedItemID.ToString());
+            return false;
+        }
+
+        FVector SpawnLocation = Owner->GetActorLocation()
+            + Owner->GetActorForwardVector() * DropDistance
+            + FVector(0.0f, 0.0f, DropHeight);
+
+        FRotator SpawnRotation = Owner->GetActorRotation();
+
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = Owner;
+        SpawnParams.Instigator = Cast<APawn>(Owner);
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+        AActor* SpawnedActor = World->SpawnActor<AActor>(DropData->PickupActorClass, SpawnLocation, SpawnRotation, SpawnParams);
+        if (APickupItem* DroppedItem = Cast<APickupItem>(SpawnedActor))
+        {
+            DroppedItem->ItemID = DroppedItemID;
+            DroppedItem->bRespawnable = false;
+            DroppedItem->RespawnTime = 0.0f;
+            DroppedItem->SetActive(true);
+        }
+    }
+
+    DropSlot.Count--;
+    if (DropSlot.Count <= 0)
+    {
+        DropSlot.ItemID = NAME_None;
+        DropSlot.Count = 0;
+    }
+
+    OnItemUsed.Broadcast(SlotIndex, DroppedItemID);
+    return true;
 }
 
 int32 UInventoryComponent::GetItemCount(FName ItemID) const

@@ -83,11 +83,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	int32 SelectedSlot = -1;
-    
-    UPROPERTY()
-    int32 SelectedUseSlot = INDEX_NONE;
-    UPROPERTY()
-    int32 SelectedDropSlot = INDEX_NONE;
 
     UPROPERTY()
     TArray<UItemEntryWidget*> SlotWidgets;

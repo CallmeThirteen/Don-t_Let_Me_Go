@@ -14,6 +14,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
     FName,
     ItemID
 );
+
+class APickupItem;  
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DONTLETMEGO_API UInventoryComponent : public UActorComponent
 {
@@ -53,6 +56,16 @@ public:
     bool RemoveItemAt(int32 SlotIndex);
     UFUNCTION(BlueprintCallable)
     bool RemoveItem(FName ItemID, int32 Count);
+
+   
+    UPROPERTY(EditDefaultsOnly, Category="Inventory")
+    float DropDistance = 100.0f;                
+
+    UPROPERTY(EditDefaultsOnly, Category="Inventory")
+    float DropHeight = 50.0f;                   
+
+    UFUNCTION(BlueprintCallable)
+    bool DropItemAt(int32 SlotIndex);            
 
     UFUNCTION(BlueprintCallable)
     int32 GetItemCount(FName ItemID) const;
