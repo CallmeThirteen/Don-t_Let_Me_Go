@@ -38,8 +38,8 @@ void UInventoryWidget::NativeConstruct()
         HotSlotWidgets.Empty();
         
         for (int32 i = 0; i < HotMaxSlots; ++i)
-        {
-            UItemEntryWidget* EntryWidget = CreateSlotWidget(i);
+        {   int32 HotIndex=i+InventorySlotWidgets.Num();
+            UItemEntryWidget* EntryWidget = CreateSlotWidget(HotIndex);
             if (EntryWidget)
             {
                 HotSlotWidgets.Add(EntryWidget);
@@ -110,17 +110,17 @@ void UInventoryWidget::RefreshInventory(const TArray<FInventorySlot>& Items)
     {
         UItemEntryWidget* EntryWidget = HotSlotWidgets[i];
         if (!EntryWidget) continue;
-        
-        if (Items.IsValidIndex(i) && !Items[i].ItemID.IsNone() && Items[i].Count > 0)
+        int32 HotIndex=i+InventoryMaxSlots;
+        if (Items.IsValidIndex(HotIndex) && !Items[HotIndex].ItemID.IsNone() && Items[HotIndex].Count > 0)
         {
-            const FInventorySlot& Data = Items[i];
+            const FInventorySlot& Data = Items[HotIndex];
             FString DisplayText = FString::Printf(TEXT("%s"), 
                 *Data.ItemID.ToString()
             );
             EntryWidget->SetItemName(DisplayText);
             // Slot->SetItemIcon(GetItemIcon(Data.ItemID)); 
             EntryWidget->SetItemCount(Data.Count);
-            EntryWidget->SetSlotIndex(i);
+            EntryWidget->SetSlotIndex(HotIndex);
             EntryWidget->SetIsEmpty(false);
             
         }else
@@ -147,9 +147,16 @@ UItemEntryWidget* UInventoryWidget::CreateSlotWidget(int32 SlotIndex)
 }
 
 void UInventoryWidget::GetGridPosition(int32 SlotIndex, int32& OutRow, int32& OutColumn) const
-{
+{   
     OutRow = SlotIndex / InventoryGridColumns;
     OutColumn = SlotIndex % InventoryGridColumns;
+    
+    if(SlotIndex>=InventoryMaxSlots){
+    SlotIndex-=InventoryMaxSlots;
+    OutRow = SlotIndex / HotGridColumns;
+    OutColumn = SlotIndex % HotGridColumns;
+}
+    
 }
 
 void UInventoryWidget::CloseItemInfo(){
@@ -176,24 +183,31 @@ void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
     }
     CloseItemUseInfo();
     SelectedSlot = SlotIndex;
+    // === 先全部取消 ===
     for (int32 i = 0; i < InventorySlotWidgets.Num(); i++)
     {
         if (InventorySlotWidgets[i])
-        {
-            InventorySlotWidgets[i]->SetSelected(
-                i == SelectedSlot
-            );
-        }
+            InventorySlotWidgets[i]->SetSelected(false);
     }
-     for (int32 i = 0; i < HotSlotWidgets.Num(); i++)
+    for (int32 i = 0; i < HotSlotWidgets.Num(); i++)
     {
         if (HotSlotWidgets[i])
-        {
-            HotSlotWidgets[i]->SetSelected(
-                i == SelectedSlot
-            );
-        }
+            HotSlotWidgets[i]->SetSelected(false);
     }
+
+    // === 再单独高亮当前 ===
+    if (SelectedSlot >= 0 && SelectedSlot < InventoryMaxSlots)
+    {
+        if (InventorySlotWidgets.IsValidIndex(SelectedSlot))
+            InventorySlotWidgets[SelectedSlot]->SetSelected(true);
+    }
+    else if (SelectedSlot >= InventoryMaxSlots && SelectedSlot < InventoryMaxSlots + HotMaxSlots)
+    {
+        int32 HotIndex = SelectedSlot - InventoryMaxSlots;
+        if (HotSlotWidgets.IsValidIndex(HotIndex))
+            HotSlotWidgets[HotIndex]->SetSelected(true);
+    }
+
     OnSlotClicked(SlotIndex);
     
     if(!InventoryComponent)
@@ -262,23 +276,29 @@ void UInventoryWidget::HandleSlotRightClicked(int32 SlotIndex)
     SelectedSlot = SlotIndex;
     
      
+    // === 先全部取消 ===
     for (int32 i = 0; i < InventorySlotWidgets.Num(); i++)
     {
         if (InventorySlotWidgets[i])
-        {
-            InventorySlotWidgets[i]->SetSelected(
-                i == SelectedSlot
-            );
-        }
+            InventorySlotWidgets[i]->SetSelected(false);
     }
     for (int32 i = 0; i < HotSlotWidgets.Num(); i++)
     {
         if (HotSlotWidgets[i])
-        {
-            HotSlotWidgets[i]->SetSelected(
-                i == SelectedSlot
-            );
-        }
+            HotSlotWidgets[i]->SetSelected(false);
+    }
+
+    // === 再单独高亮当前 ===
+    if (SelectedSlot >= 0 && SelectedSlot < InventoryMaxSlots)
+    {
+        if (InventorySlotWidgets.IsValidIndex(SelectedSlot))
+            InventorySlotWidgets[SelectedSlot]->SetSelected(true);
+    }
+    else if (SelectedSlot >= InventoryMaxSlots && SelectedSlot < InventoryMaxSlots + HotMaxSlots)
+    {
+        int32 HotIndex = SelectedSlot - InventoryMaxSlots;
+        if (HotSlotWidgets.IsValidIndex(HotIndex))
+            HotSlotWidgets[HotIndex]->SetSelected(true);
     }
 
 
