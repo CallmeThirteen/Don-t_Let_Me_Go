@@ -1,6 +1,7 @@
 #include "InventoryWidget.h"
 #include "ItemEntryWidget.h"
 #include "ItemInfoWidget.h"
+#include "../Operation/InventoryDragDropOperation.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 
@@ -77,7 +78,21 @@ FReply UInventoryWidget::NativeOnMouseButtonDown(
         InGeometry,
         InMouseEvent);
 }
-
+bool UInventoryWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+    
+    UInventoryDragDropOperation* DragOp = Cast<UInventoryDragDropOperation>(InOperation);
+    if (!DragOp || !InventoryComponent) return false;
+    
+    // 拖到背包背景 = 丢弃
+    InventoryComponent->DropItemAt(DragOp->SourceSlotIndex);
+    
+    // 恢复视觉
+    
+    
+    RefreshInventory(InventoryComponent->GetSlots());
+    return true;
+}
 void UInventoryWidget::RefreshInventory(const TArray<FInventorySlot>& Items)
 {
 
@@ -98,6 +113,8 @@ void UInventoryWidget::RefreshInventory(const TArray<FInventorySlot>& Items)
             EntryWidget->SetItemCount(Data.Count);
             EntryWidget->SetSlotIndex(i);
             EntryWidget->SetIsEmpty(false);
+             EntryWidget->SetItemID(Data.ItemID);
+             EntryWidget->SetItemCount(Data.Count);
             
         }else
         {
@@ -122,6 +139,8 @@ void UInventoryWidget::RefreshInventory(const TArray<FInventorySlot>& Items)
             EntryWidget->SetItemCount(Data.Count);
             EntryWidget->SetSlotIndex(HotIndex);
             EntryWidget->SetIsEmpty(false);
+             EntryWidget->SetItemID(Data.ItemID);
+             EntryWidget->SetItemCount(Data.Count);
             
         }else
         {
@@ -130,6 +149,7 @@ void UInventoryWidget::RefreshInventory(const TArray<FInventorySlot>& Items)
         }
        
     }
+    
 }
 
 UItemEntryWidget* UInventoryWidget::CreateSlotWidget(int32 SlotIndex)
@@ -142,8 +162,68 @@ UItemEntryWidget* UInventoryWidget::CreateSlotWidget(int32 SlotIndex)
         Entry->SetSlotIndex(SlotIndex);
         Entry->OnSlotClicked.AddDynamic(this, &UInventoryWidget::HandleSlotClicked);
         Entry->OnSlotRightClicked.AddDynamic(this, &UInventoryWidget::HandleSlotRightClicked);
+        // === 新增：绑定拖拽委托 ===
+        Entry->OnItemDragStarted.AddDynamic(this, &UInventoryWidget::HandleItemDragStarted);
+        Entry->OnItemDropped.AddDynamic(this, &UInventoryWidget::HandleItemDropped);
+    
     }
+    
     return Entry;
+}
+
+void UInventoryWidget::HandleItemDragStarted(int32 SlotIndex, UItemEntryWidget* Widget)
+{
+    // 可选：拖拽开始时源槽位变半透明
+    
+}
+
+
+void UInventoryWidget::HandleDragCancelled(int32 SlotIndex)
+{
+    // 恢复所有槽位透明度（保险起见）
+    for (auto* Widget : InventorySlotWidgets)
+    {
+        if (Widget) Widget->SetRenderOpacity(1.0f);
+    }
+    for (auto* Widget : HotSlotWidgets)
+    {
+        if (Widget) Widget->SetRenderOpacity(1.0f);
+    }
+}
+
+void UInventoryWidget::HandleItemDropped(int32 TargetSlotIndex, UDragDropOperation* Operation)
+{
+    UInventoryDragDropOperation* DragOp = Cast<UInventoryDragDropOperation>(Operation);
+    if (!DragOp || !InventoryComponent) return;
+    if (DragOp->SourceSlotIndex == TargetSlotIndex) return;
+    
+    // 执行数据移动
+    InventoryComponent->MoveItemToSlot(DragOp->SourceSlotIndex, TargetSlotIndex);
+    if(GEngine){
+		FString InventoryNum=FString::Printf(
+			TEXT("%d,%d"),
+            DragOp->SourceSlotIndex,
+            TargetSlotIndex
+		);
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			3.f,
+			FColor::Red,
+			InventoryNum
+		);
+    }
+    // 恢复源 Widget 视觉
+    if (DragOp->SourceWidget)
+    {
+        if (UItemEntryWidget* SourceWidget = Cast<UItemEntryWidget>(DragOp->SourceWidget))
+        {
+          
+            SourceWidget->SetIsDragging(false);
+        }
+    }
+    
+    // 刷新 UI
+    RefreshInventory(InventoryComponent->GetSlots());
 }
 
 void UInventoryWidget::GetGridPosition(int32 SlotIndex, int32& OutRow, int32& OutColumn) const
@@ -403,6 +483,9 @@ void UInventoryWidget::SetInventoryComponent(UInventoryComponent* InComponent)
             this,
             &UInventoryWidget::HandleInventoryChanged
         );
+         InventoryComponent->OnItemChanged.RemoveDynamic(
+            this, &UInventoryWidget::HandleInventoryChanged
+        );
     }
 
     InventoryComponent = InComponent;
@@ -412,6 +495,9 @@ void UInventoryWidget::SetInventoryComponent(UInventoryComponent* InComponent)
         InventoryComponent->OnItemUsed.AddDynamic(
             this,
             &UInventoryWidget::HandleInventoryChanged
+        );
+         InventoryComponent->OnItemChanged.AddDynamic(
+            this, &UInventoryWidget::HandleInventoryChanged
         );
 
         RefreshInventory(InventoryComponent->GetSlots());

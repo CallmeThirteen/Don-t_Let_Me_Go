@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "../Inventory/InventoryComponent.h"
 #include "../Inventory/InventoryTypes.h"
+#include "../Operation/InventoryDragDropOperation.h"
 #include "Blueprint/UserWidget.h"
 #include "ItemInfoWidget.h"
 #include "ItemUseInfoWidget.h"
@@ -18,7 +19,6 @@ class DONTLETMEGO_API UInventoryWidget : public UUserWidget
     GENERATED_BODY()
 
 public:
-    // ✅ 只保留这一个
     UPROPERTY()
     UInventoryComponent* InventoryComponent;
 
@@ -27,14 +27,15 @@ public:
 
     UFUNCTION(BlueprintCallable)
     void CloseItemInfo();
+    
     UFUNCTION(BlueprintCallable)
     void CloseItemUseInfo();
 
     UFUNCTION()
     void OnUseClicked();    
+    
     UFUNCTION()
     void OnDropClicked();
- 
 
     UFUNCTION(BlueprintCallable)
     void SetInventoryComponent(UInventoryComponent* InComponent);
@@ -45,13 +46,23 @@ public:
     UFUNCTION(BlueprintImplementableEvent)
     void OnSlotRightClicked(int32 SlotIndex);
 
+    // ✅ 新增：处理拖拽取消（恢复透明度）
+    UFUNCTION()
+    void HandleDragCancelled(int32 SlotIndex);
 
 protected:
     virtual void NativeConstruct() override;
 
     virtual FReply NativeOnMouseButtonDown(
-    const FGeometry& InGeometry,
-    const FPointerEvent& InMouseEvent
+        const FGeometry& InGeometry,
+        const FPointerEvent& InMouseEvent
+    ) override;
+    
+    // ✅ 新增：背景接收Drop（拖到背包外丢弃物品）
+    virtual bool NativeOnDrop(
+        const FGeometry& InGeometry,
+        const FDragDropEvent& InDragDropEvent,
+        UDragDropOperation* InOperation
     ) override;
 
     UItemEntryWidget* CreateSlotWidget(int32 SlotIndex);
@@ -59,6 +70,7 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UUniformGridPanel* ItemGrid;
+    
     UPROPERTY(meta = (BindWidget))
     UUniformGridPanel* HotGrid;
     
@@ -91,15 +103,23 @@ protected:
 
     UPROPERTY()
     UItemEntryWidget* SelectedWidget = nullptr;
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
-	int32 SelectedSlot = -1;
- 
+    
+    UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+    int32 SelectedSlot = -1;
 
     UPROPERTY()
     TArray<UItemEntryWidget*> InventorySlotWidgets;
+    
     UPROPERTY()
     TArray<UItemEntryWidget*> HotSlotWidgets;
 
+    UFUNCTION()
+    void HandleItemDragStarted(int32 SlotIndex, UItemEntryWidget* Widget);
+
+    // ✅ 修复：参数改为 UDragDropOperation* 匹配委托签名
+    UFUNCTION()
+    void HandleItemDropped(int32 TargetSlotIndex, UDragDropOperation* Operation);
+    
     UFUNCTION()
     void HandleSlotClicked(int32 SlotIndex);
 
@@ -107,8 +127,5 @@ protected:
     void HandleSlotRightClicked(int32 SlotIndex);
 
     UFUNCTION()
-    void HandleInventoryChanged(
-        int32 SlotIndex,
-        FName ItemID
-    );
+    void HandleInventoryChanged(int32 SlotIndex, FName ItemID);
 };

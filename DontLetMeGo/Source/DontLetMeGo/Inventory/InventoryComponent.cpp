@@ -10,6 +10,7 @@ UInventoryComponent::UInventoryComponent()
 void UInventoryComponent::BeginPlay()
 {
     Super::BeginPlay();
+    Slots.SetNum(InventoryMaxSlots + HotMaxSlots);
 }
 
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -73,23 +74,36 @@ bool UInventoryComponent::AddItem(FName ItemID, int32 Count)
 
         if (Count <= 0)
         {
-            OnItemUsed.Broadcast(-1, ItemID);
+            OnItemChanged.Broadcast(-1, ItemID);
             return true;
         }
     }
 
     // 3. 还有剩余，新增格子
-    while (Count > 0)
+    // 3. 放入空格
+for (FInventorySlot& Slot : Slots)
+{
+    if (!Slot.ItemID.IsNone())
     {
-        FInventorySlot NewSlot;
-        NewSlot.ItemID = ItemID;
-        NewSlot.Count = FMath::Min(Count, MaxStack);
-        Count -= NewSlot.Count;
-        Slots.Add(NewSlot);
+        continue;
     }
 
-    OnItemUsed.Broadcast(-1, ItemID);
-    return true;
+    int32 AddCount = FMath::Min(Count, MaxStack);
+
+    Slot.ItemID = ItemID;
+    Slot.Count = AddCount;
+
+    Count -= AddCount;
+
+    if (Count <= 0)
+    {
+        OnItemChanged.Broadcast(-1, ItemID);
+        return true;
+    }
+}
+
+// 背包满了
+return false;
 }
 
 bool UInventoryComponent::UseItemAt(int32 SlotIndex)
@@ -228,7 +242,7 @@ bool UInventoryComponent::RemoveItemAt(int32 SlotIndex)
         Slot.Count = 0;
     }
     
-    OnItemUsed.Broadcast(SlotIndex, ItemData->ItemID);
+    OnItemChanged.Broadcast(SlotIndex, ItemData->ItemID);
     return true;
 }
 bool UInventoryComponent::RemoveItem(FName ItemID, int32 Count)
@@ -240,9 +254,10 @@ bool UInventoryComponent::RemoveItem(FName ItemID, int32 Count)
             Slots[i].Count -= Count;
             if (Slots[i].Count <= 0)
             {
-                Slots.RemoveAt(i);
+                Slots[i].ItemID = NAME_None;
+                Slots[i].Count = 0;
             }
-            OnItemUsed.Broadcast(i, ItemID);
+            OnItemChanged.Broadcast(i, ItemID);
             return true;
         }
     }
@@ -303,7 +318,62 @@ bool UInventoryComponent::DropItemAt(int32 SlotIndex)
         DropSlot.Count = 0;
     }
 
-    OnItemUsed.Broadcast(SlotIndex, DroppedItemID);
+    OnItemChanged.Broadcast(SlotIndex, DroppedItemID);
+    return true;
+}
+
+bool UInventoryComponent::MoveItemToSlot(int32 FromSlot, int32 ToSlot)
+{
+      UE_LOG(LogTemp, Warning,
+        TEXT("SlotsNum=%d  From=%d  To=%d"),
+        Slots.Num(),
+        FromSlot,
+        ToSlot);
+    if (!Slots.IsValidIndex(FromSlot) || !Slots.IsValidIndex(ToSlot)) return false;
+    if (FromSlot == ToSlot) return false;
+    
+    FInventorySlot& FromData = Slots[FromSlot];
+    if (FromData.ItemID.IsNone() || FromData.Count <= 0) return false;
+    
+    FInventorySlot& ToData = Slots[ToSlot];
+    
+    // 目标为空：直接移动
+    if (ToData.ItemID.IsNone() || ToData.Count <= 0)
+    {
+        ToData = FromData;
+        FromData = FInventorySlot();
+        OnItemChanged.Broadcast(FromSlot, FName());
+        OnItemChanged.Broadcast(ToSlot, ToData.ItemID);
+        return true;
+    }
+    
+    // 同类型：尝试合并
+    if (ToData.ItemID == FromData.ItemID)
+    {
+        const FItemData* ItemData = GetItemData(ToData.ItemID);
+        if (!ItemData) return false;
+        
+        int32 CanMerge = FMath::Min(FromData.Count, ItemData->MaxStack - ToData.Count);
+        if (CanMerge > 0)
+        {
+            ToData.Count += CanMerge;
+            FromData.Count -= CanMerge;
+            if (FromData.Count <= 0) FromData = FInventorySlot();
+            
+            OnItemChanged.Broadcast(FromSlot, FromData.ItemID);
+            OnItemChanged.Broadcast(ToSlot, ToData.ItemID);
+            return true;
+        }
+        // 合并不了，交换
+    }
+    
+    // 不同类型 或 合并满了：交换
+    FInventorySlot Temp = ToData;
+    ToData = FromData;
+    FromData = Temp;
+    
+    OnItemChanged.Broadcast(FromSlot, FromData.ItemID);
+    OnItemChanged.Broadcast(ToSlot, ToData.ItemID);
     return true;
 }
 

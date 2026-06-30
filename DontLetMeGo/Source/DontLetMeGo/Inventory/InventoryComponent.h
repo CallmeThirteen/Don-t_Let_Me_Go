@@ -14,6 +14,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
     FName,
     ItemID
 );
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+    FOnItemChangedDelegate,
+    int32,
+    SlotIndex,
+    FName,
+    ItemID
+);
 
 class APickupItem;  
 
@@ -48,6 +55,8 @@ public:
 
     UPROPERTY(BlueprintAssignable)
    FOnItemUsedDelegate OnItemUsed;
+    UPROPERTY(BlueprintAssignable)
+   FOnItemChangedDelegate OnItemChanged;
 
     UFUNCTION(BlueprintCallable, Category="Inventory")
     void ExecuteItemEffect(const FItemData& ItemData, APawn* User);
@@ -57,6 +66,8 @@ public:
     UFUNCTION(BlueprintCallable)
     bool RemoveItem(FName ItemID, int32 Count);
 
+    UFUNCTION(BlueprintCallable)
+    bool MoveItemToSlot(int32 FromSlot, int32 ToSlot);
    
     UPROPERTY(EditDefaultsOnly, Category="Inventory")
     float DropDistance = 100.0f;                
@@ -64,6 +75,12 @@ public:
     UPROPERTY(EditDefaultsOnly, Category="Inventory")
     float DropHeight = 50.0f;                   
 
+    UPROPERTY(EditDefaultsOnly, Category="Inventory")
+    int32 InventoryMaxSlots = 40;
+
+    UPROPERTY(EditDefaultsOnly, Category="Inventory")
+    int32 HotMaxSlots = 8;
+    
     UFUNCTION(BlueprintCallable)
     bool DropItemAt(int32 SlotIndex);            
 
