@@ -9,19 +9,42 @@ void UInventoryWidget::NativeConstruct()
 {
     Super::NativeConstruct();
     
-    if (SlotWidgets.Num() == 0 &&ItemGrid && ItemEntryClass)
+    if (InventorySlotWidgets.Num() == 0 &&ItemGrid && ItemEntryClass)
     {
         ItemGrid->ClearChildren();
-        SlotWidgets.Empty();
+        InventorySlotWidgets.Empty();
         
-        for (int32 i = 0; i < MaxSlots; ++i)
+        for (int32 i = 0; i < InventoryMaxSlots; ++i)
         {
             UItemEntryWidget* EntryWidget = CreateSlotWidget(i);
             if (EntryWidget)
             {
-                SlotWidgets.Add(EntryWidget);
+                InventorySlotWidgets.Add(EntryWidget);
                 EntryWidget->ClearSlot();
                 UUniformGridSlot* GridSlot = ItemGrid->AddChildToUniformGrid(EntryWidget);
+                if (GridSlot)
+                {
+                    int32 Row, Column;
+                    GetGridPosition(i, Row, Column);
+                    GridSlot->SetRow(Row);
+                    GridSlot->SetColumn(Column);
+                }
+            }
+        }
+    }
+    if (HotSlotWidgets.Num() == 0 &&HotGrid && ItemEntryClass)
+    {
+        HotGrid->ClearChildren();
+        HotSlotWidgets.Empty();
+        
+        for (int32 i = 0; i < HotMaxSlots; ++i)
+        {
+            UItemEntryWidget* EntryWidget = CreateSlotWidget(i);
+            if (EntryWidget)
+            {
+                HotSlotWidgets.Add(EntryWidget);
+                EntryWidget->ClearSlot();
+                UUniformGridSlot* GridSlot = HotGrid->AddChildToUniformGrid(EntryWidget);
                 if (GridSlot)
                 {
                     int32 Row, Column;
@@ -59,9 +82,9 @@ void UInventoryWidget::RefreshInventory(const TArray<FInventorySlot>& Items)
 {
 
    
-    for (int32 i = 0; i < SlotWidgets.Num(); ++i)
+    for (int32 i = 0; i < InventorySlotWidgets.Num(); ++i)
     {
-        UItemEntryWidget* EntryWidget = SlotWidgets[i];
+        UItemEntryWidget* EntryWidget = InventorySlotWidgets[i];
         if (!EntryWidget) continue;
         
         if (Items.IsValidIndex(i) && !Items[i].ItemID.IsNone() && Items[i].Count > 0)
@@ -71,7 +94,31 @@ void UInventoryWidget::RefreshInventory(const TArray<FInventorySlot>& Items)
                 *Data.ItemID.ToString()
             );
             EntryWidget->SetItemName(DisplayText);
-            // Slot->SetItemIcon(GetItemIcon(Data.ItemID)); // 需要你自己实现图标查找
+            // Slot->SetItemIcon(GetItemIcon(Data.ItemID)); 
+            EntryWidget->SetItemCount(Data.Count);
+            EntryWidget->SetSlotIndex(i);
+            EntryWidget->SetIsEmpty(false);
+            
+        }else
+        {
+            // ✅ 槽位为空时清空显示
+            EntryWidget->ClearSlot();
+        }
+       
+    }
+    for (int32 i = 0; i < HotSlotWidgets.Num(); ++i)
+    {
+        UItemEntryWidget* EntryWidget = HotSlotWidgets[i];
+        if (!EntryWidget) continue;
+        
+        if (Items.IsValidIndex(i) && !Items[i].ItemID.IsNone() && Items[i].Count > 0)
+        {
+            const FInventorySlot& Data = Items[i];
+            FString DisplayText = FString::Printf(TEXT("%s"), 
+                *Data.ItemID.ToString()
+            );
+            EntryWidget->SetItemName(DisplayText);
+            // Slot->SetItemIcon(GetItemIcon(Data.ItemID)); 
             EntryWidget->SetItemCount(Data.Count);
             EntryWidget->SetSlotIndex(i);
             EntryWidget->SetIsEmpty(false);
@@ -101,8 +148,8 @@ UItemEntryWidget* UInventoryWidget::CreateSlotWidget(int32 SlotIndex)
 
 void UInventoryWidget::GetGridPosition(int32 SlotIndex, int32& OutRow, int32& OutColumn) const
 {
-    OutRow = SlotIndex / GridColumns;
-    OutColumn = SlotIndex % GridColumns;
+    OutRow = SlotIndex / InventoryGridColumns;
+    OutColumn = SlotIndex % InventoryGridColumns;
 }
 
 void UInventoryWidget::CloseItemInfo(){
@@ -129,22 +176,31 @@ void UInventoryWidget::HandleSlotClicked(int32 SlotIndex)
     }
     CloseItemUseInfo();
     SelectedSlot = SlotIndex;
-    for (int32 i = 0; i < SlotWidgets.Num(); i++)
+    for (int32 i = 0; i < InventorySlotWidgets.Num(); i++)
     {
-        if (SlotWidgets[i])
+        if (InventorySlotWidgets[i])
         {
-            SlotWidgets[i]->SetSelected(
+            InventorySlotWidgets[i]->SetSelected(
                 i == SelectedSlot
             );
         }
     }
-    
+     for (int32 i = 0; i < HotSlotWidgets.Num(); i++)
+    {
+        if (HotSlotWidgets[i])
+        {
+            HotSlotWidgets[i]->SetSelected(
+                i == SelectedSlot
+            );
+        }
+    }
     OnSlotClicked(SlotIndex);
     
     if(!InventoryComponent)
     {
         return;
     }
+    
 
     const TArray<FInventorySlot>& InfoSlots =
         InventoryComponent->GetSlots();
@@ -206,15 +262,26 @@ void UInventoryWidget::HandleSlotRightClicked(int32 SlotIndex)
     SelectedSlot = SlotIndex;
     
      
-    for (int32 i = 0; i < SlotWidgets.Num(); i++)
+    for (int32 i = 0; i < InventorySlotWidgets.Num(); i++)
     {
-        if (SlotWidgets[i])
+        if (InventorySlotWidgets[i])
         {
-            SlotWidgets[i]->SetSelected(
+            InventorySlotWidgets[i]->SetSelected(
                 i == SelectedSlot
             );
         }
     }
+    for (int32 i = 0; i < HotSlotWidgets.Num(); i++)
+    {
+        if (HotSlotWidgets[i])
+        {
+            HotSlotWidgets[i]->SetSelected(
+                i == SelectedSlot
+            );
+        }
+    }
+
+
     if(!InventoryComponent)
     {
         return;

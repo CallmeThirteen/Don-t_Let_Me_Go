@@ -59,6 +59,8 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UUniformGridPanel* ItemGrid;
+    UPROPERTY(meta = (BindWidget))
+    UUniformGridPanel* HotGrid;
     
     UPROPERTY(EditDefaultsOnly, Category = "Inventory")
     TSubclassOf<UItemEntryWidget> ItemEntryClass;
@@ -76,16 +78,27 @@ protected:
     UItemUseInfoWidget* ItemUseInfoWidget;
 
     UPROPERTY(EditDefaultsOnly, Category = "Inventory")
-    int32 GridColumns = 10;
+    int32 InventoryGridColumns = 10;
     
     UPROPERTY(EditDefaultsOnly, Category = "Inventory")
-    int32 MaxSlots = 40;
+    int32 InventoryMaxSlots = 40;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
-	int32 SelectedSlot = -1;
+    UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+    int32 HotGridColumns = 1;
+    
+    UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+    int32 HotMaxSlots = 8;
 
     UPROPERTY()
-    TArray<UItemEntryWidget*> SlotWidgets;
+    UItemEntryWidget* SelectedWidget = nullptr;
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+	int32 SelectedSlot = -1;
+ 
+
+    UPROPERTY()
+    TArray<UItemEntryWidget*> InventorySlotWidgets;
+    UPROPERTY()
+    TArray<UItemEntryWidget*> HotSlotWidgets;
 
     UFUNCTION()
     void HandleSlotClicked(int32 SlotIndex);
@@ -94,8 +107,8 @@ protected:
     void HandleSlotRightClicked(int32 SlotIndex);
 
     UFUNCTION()
-void HandleInventoryChanged(
-    int32 SlotIndex,
-    FName ItemID
-);
+    void HandleInventoryChanged(
+        int32 SlotIndex,
+        FName ItemID
+    );
 };

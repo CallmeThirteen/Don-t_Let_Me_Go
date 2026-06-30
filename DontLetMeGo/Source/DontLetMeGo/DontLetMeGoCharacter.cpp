@@ -123,12 +123,7 @@ void ADontLetMeGoCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ADontLetMeGoCharacter::Move);
-		EnhancedInputComponent->BindAction(
-    MoveAction,
-    ETriggerEvent::Completed,
-    this,
-    &ADontLetMeGoCharacter::StopMove
-);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ADontLetMeGoCharacter::StopMove);
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ADontLetMeGoCharacter::Look);
@@ -152,12 +147,14 @@ void ADontLetMeGoCharacter::Move(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	if (StatusComponent)
 	{	
-    	StatusComponent->SetMoving(
+    	if(StatusComponent->Stamina.CurrentValue<=0){
+			StatusComponent->SetMoving(false);
+		
+		}
+		StatusComponent->SetMoving(
         	!MovementVector.IsNearlyZero()
     	);
-		if(StatusComponent->Stamina.CurrentValue<=0){
-			return;
-		}
+		
 	}
 	if (Controller != nullptr)
 	{
